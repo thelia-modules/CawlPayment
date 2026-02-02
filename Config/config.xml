@@ -13,42 +13,7 @@
         <form name="cawlpayment.configuration" class="CawlPayment\Form\ConfigurationForm" />
     </forms>
 
-    <hooks>
-        <hook id="cawlpayment.hook.admin" class="CawlPayment\Hook\AdminHook">
-            <tag name="hook.event_listener" event="module.configuration" type="back" method="onModuleConfiguration" />
-        </hook>
-        <hook id="cawlpayment.hook.front" class="CawlPayment\Hook\FrontHook">
-            <tag name="hook.event_listener" event="order-invoice.payment-extra" type="front" method="onPaymentExtra" />
-        </hook>
-    </hooks>
-
-    <services>
-        <service id="cawlpayment.api.service" class="CawlPayment\Service\CawlApiService" scope="request">
-        </service>
-        <service id="cawlpayment.event_listener.payment_options" class="CawlPayment\EventListeners\PaymentOptionsListener">
-            <argument type="service" id="OpenApi\Model\Api\ModelFactory"/>
-            <tag name="kernel.event_subscriber" />
-        </service>
-
-        <!-- Admin Controllers -->
-        <service id="CawlPayment\Controller\Admin\ConfigurationController" class="CawlPayment\Controller\Admin\ConfigurationController" public="true">
-            <argument type="service" id="thelia.securityContext"/>
-            <tag name="controller.service_arguments"/>
-        </service>
-        <service id="CawlPayment\Controller\Admin\TestController" class="CawlPayment\Controller\Admin\TestController" public="true">
-            <argument type="service" id="thelia.securityContext"/>
-            <tag name="controller.service_arguments"/>
-        </service>
-
-        <!-- Front Controllers -->
-        <service id="CawlPayment\Controller\Front\PaymentController" class="CawlPayment\Controller\Front\PaymentController" public="true">
-            <argument type="service" id="event_dispatcher"/>
-            <tag name="controller.service_arguments"/>
-        </service>
-        <service id="CawlPayment\Controller\Front\WebhookController" class="CawlPayment\Controller\Front\WebhookController" public="true">
-            <argument type="service" id="event_dispatcher"/>
-            <tag name="controller.service_arguments"/>
-        </service>
-    </services>
+    <!-- Services and hooks moved to Config/services.yaml -->
+    <!-- Routes moved to PHP #[Route] attributes on controllers -->
 
 </config>

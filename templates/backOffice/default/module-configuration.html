@@ -646,6 +646,38 @@
                         </div>
                     </div>
                 </div>
+
+                {* Webhook Security Section *}
+                <div class="cawl-config-section">
+                    <h4><i class="glyphicon glyphicon-lock"></i> {intl d='cawlpayment' l='Webhook Security'}</h4>
+                    <p class="text-muted">{intl d='cawlpayment' l='Configure IP restrictions for webhook access to enhance security.'}</p>
+
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="cawlpayment_configuration[webhook_whitelist_enabled]"
+                                       id="webhook_whitelist_enabled" value="1"
+                                       {if $config.webhook_whitelist_enabled == '1'}checked{/if}>
+                                {intl d='cawlpayment' l='Enable IP whitelist for webhooks'}
+                            </label>
+                            <p class="help-block">{intl d='cawlpayment' l='When disabled in test mode, all IPs are allowed. In production mode, the whitelist is always enforced if IPs are configured.'}</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="webhook_ip_whitelist">{intl d='cawlpayment' l='Webhook IP Whitelist'}</label>
+                        <textarea class="form-control" name="cawlpayment_configuration[webhook_ip_whitelist]"
+                                  id="webhook_ip_whitelist" rows="3"
+                                  placeholder="192.168.1.1, 10.0.0.0/8, 172.16.0.0/12">{$config.webhook_ip_whitelist|escape:'html'}</textarea>
+                        <p class="help-block">{intl d='cawlpayment' l='Comma-separated list of allowed IPs or CIDR ranges (IPv4 only). Leave empty and disable whitelist to allow all IPs in test mode.'}</p>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="glyphicon glyphicon-info-sign"></i>
+                        <strong>{intl d='cawlpayment' l='CAWL/Worldline IP Ranges:'}</strong>
+                        {intl d='cawlpayment' l='Contact CAWL support to obtain the official IP ranges for webhook notifications. These IPs should be whitelisted for production use.'}
+                    </div>
+                </div>
             </div>
 
             {* Documentation Tab *}

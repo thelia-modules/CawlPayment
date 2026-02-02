@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
@@ -33,6 +34,7 @@ class PaymentController extends BaseFrontController
     /**
      * Initiate payment process
      */
+    #[Route(path: '/cawlpayment/pay/{orderId}/{methodCode}', name: 'cawlpayment.front.pay', requirements: ['orderId' => '\d+', 'methodCode' => '[a-z0-9_]+'], methods: ['GET', 'POST'])]
     public function payAction(Request $request, int $orderId, string $methodCode): Response
     {
         // Get order
@@ -96,6 +98,7 @@ class PaymentController extends BaseFrontController
     /**
      * Handle success return from CAWL
      */
+    #[Route(path: '/cawlpayment/success', name: 'cawlpayment.front.success', methods: ['GET'])]
     public function successAction(Request $request): Response
     {
         $orderId = $request->query->get('order_id');
@@ -107,6 +110,22 @@ class PaymentController extends BaseFrontController
 
         $order = OrderQuery::create()->findPk($orderId);
         if (!$order) {
+            return $this->pageNotFound();
+        }
+
+        // Verify order belongs to current customer
+        $customer = $this->getSecurityContext()->getCustomerUser();
+        if (!$customer || $order->getCustomerId() !== $customer->getId()) {
+            \Thelia\Log\Tlog::getInstance()->warning(
+                '[CawlPayment] Unauthorized access attempt to success page for order #' . $orderId .
+                ' by customer ' . ($customer ? $customer->getId() : 'anonymous')
+            );
+            return $this->pageNotFound();
+        }
+
+        // Verify this is our payment module
+        $module = new CawlPayment();
+        if ($order->getPaymentModuleId() !== $module->getModuleModel()->getId()) {
             return $this->pageNotFound();
         }
 
@@ -148,12 +167,34 @@ class PaymentController extends BaseFrontController
     /**
      * Handle failure return from CAWL
      */
+    #[Route(path: '/cawlpayment/failure', name: 'cawlpayment.front.failure', methods: ['GET'])]
     public function failureAction(Request $request): Response
     {
         $orderId = $request->query->get('order_id');
         $message = $request->query->get('message', 'Payment failed');
 
         if (!$orderId) {
+            return $this->pageNotFound();
+        }
+
+        $order = OrderQuery::create()->findPk($orderId);
+        if (!$order) {
+            return $this->pageNotFound();
+        }
+
+        // Verify order belongs to current customer
+        $customer = $this->getSecurityContext()->getCustomerUser();
+        if (!$customer || $order->getCustomerId() !== $customer->getId()) {
+            \Thelia\Log\Tlog::getInstance()->warning(
+                '[CawlPayment] Unauthorized access attempt to failure page for order #' . $orderId .
+                ' by customer ' . ($customer ? $customer->getId() : 'anonymous')
+            );
+            return $this->pageNotFound();
+        }
+
+        // Verify this is our payment module
+        $module = new CawlPayment();
+        if ($order->getPaymentModuleId() !== $module->getModuleModel()->getId()) {
             return $this->pageNotFound();
         }
 
@@ -165,11 +206,33 @@ class PaymentController extends BaseFrontController
     /**
      * Handle cancel return from CAWL
      */
+    #[Route(path: '/cawlpayment/cancel', name: 'cawlpayment.front.cancel', methods: ['GET'])]
     public function cancelAction(Request $request): Response
     {
         $orderId = $request->query->get('order_id');
 
         if (!$orderId) {
+            return $this->pageNotFound();
+        }
+
+        $order = OrderQuery::create()->findPk($orderId);
+        if (!$order) {
+            return $this->pageNotFound();
+        }
+
+        // Verify order belongs to current customer
+        $customer = $this->getSecurityContext()->getCustomerUser();
+        if (!$customer || $order->getCustomerId() !== $customer->getId()) {
+            \Thelia\Log\Tlog::getInstance()->warning(
+                '[CawlPayment] Unauthorized access attempt to cancel page for order #' . $orderId .
+                ' by customer ' . ($customer ? $customer->getId() : 'anonymous')
+            );
+            return $this->pageNotFound();
+        }
+
+        // Verify this is our payment module
+        $module = new CawlPayment();
+        if ($order->getPaymentModuleId() !== $module->getModuleModel()->getId()) {
             return $this->pageNotFound();
         }
 
@@ -181,6 +244,7 @@ class PaymentController extends BaseFrontController
     /**
      * Get payment status (AJAX)
      */
+    #[Route(path: '/cawlpayment/status/{hostedCheckoutId}', name: 'cawlpayment.front.status', requirements: ['hostedCheckoutId' => '[a-zA-Z0-9_-]+'], methods: ['GET'])]
     public function statusAction(Request $request, string $hostedCheckoutId): JsonResponse
     {
         try {

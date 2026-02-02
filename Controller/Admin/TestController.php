@@ -8,6 +8,7 @@ use CawlPayment\Service\CawlApiService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Core\Security\SecurityContext;
@@ -42,6 +43,7 @@ class TestController
     /**
      * Test API connection using the official SDK
      */
+    #[Route(path: '/admin/cawlpayment/api-test/connection', name: 'cawlpayment.admin.api_test_connection', methods: ['POST'])]
     public function testConnectionAction(Request $request): JsonResponse
     {
         if (!$this->checkAdminAccess()) {
@@ -64,6 +66,7 @@ class TestController
     /**
      * Get configuration summary
      */
+    #[Route(path: '/admin/cawlpayment/api-test/config', name: 'cawlpayment.admin.api_test_config', methods: ['GET'])]
     public function configurationAction(Request $request): JsonResponse
     {
         if (!$this->checkAdminAccess()) {
@@ -89,6 +92,7 @@ class TestController
     /**
      * Get available payment products from the API
      */
+    #[Route(path: '/admin/cawlpayment/api-test/products', name: 'cawlpayment.admin.api_test_products', methods: ['GET'])]
     public function paymentProductsAction(Request $request): JsonResponse
     {
         if (!$this->checkAdminAccess()) {
@@ -115,6 +119,7 @@ class TestController
     /**
      * Create a test hosted checkout (10 EUR)
      */
+    #[Route(path: '/admin/cawlpayment/api-test/create-checkout', name: 'cawlpayment.admin.api_test_create_checkout', methods: ['POST'])]
     public function createTestCheckoutAction(Request $request): JsonResponse
     {
         if (!$this->checkAdminAccess(AccessManager::UPDATE)) {
@@ -140,6 +145,7 @@ class TestController
     /**
      * Get hosted checkout status
      */
+    #[Route(path: '/admin/cawlpayment/api-test/checkout-status/{hostedCheckoutId}', name: 'cawlpayment.admin.api_test_checkout_status', requirements: ['hostedCheckoutId' => '[a-zA-Z0-9_-]+'], methods: ['GET'])]
     public function checkoutStatusAction(Request $request, string $hostedCheckoutId): JsonResponse
     {
         if (!$this->checkAdminAccess()) {
@@ -162,6 +168,7 @@ class TestController
     /**
      * Get payment status
      */
+    #[Route(path: '/admin/cawlpayment/api-test/payment-status/{paymentId}', name: 'cawlpayment.admin.api_test_payment_status', requirements: ['paymentId' => '[a-zA-Z0-9_-]+'], methods: ['GET'])]
     public function paymentStatusAction(Request $request, string $paymentId): JsonResponse
     {
         if (!$this->checkAdminAccess()) {
@@ -184,6 +191,7 @@ class TestController
     /**
      * Test return page after checkout (displays result)
      */
+    #[Route(path: '/admin/cawlpayment/test-return', name: 'cawlpayment.admin.api_test_return', methods: ['GET'])]
     public function testReturnAction(Request $request): Response
     {
         $hostedCheckoutId = $request->query->get('hostedCheckoutId');
@@ -246,6 +254,7 @@ class TestController
     /**
      * Show test dashboard with all available tests
      */
+    #[Route(path: '/admin/cawlpayment/api-test', name: 'cawlpayment.admin.test_dashboard', methods: ['GET'])]
     public function dashboardAction(Request $request): Response
     {
         if (!$this->checkAdminAccess()) {

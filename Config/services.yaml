@@ -1,0 +1,32 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    # Auto-register all classes in namespace
+    CawlPayment\:
+        resource: '../'
+        exclude:
+            - '../Config/'
+            - '../Model/'
+            - '../I18n/'
+            - '../CawlPayment.php'
+
+    # Controllers must be public
+    CawlPayment\Controller\:
+        resource: '../Controller/'
+        public: true
+        tags: ['controller.service_arguments']
+
+    # Hooks - Thelia-specific tags (cannot use PHP attributes)
+    CawlPayment\Hook\AdminHook:
+        tags:
+            - { name: 'hook.event_listener', event: 'module.configuration', type: 'back', method: 'onModuleConfiguration' }
+
+    CawlPayment\Hook\FrontHook:
+        tags:
+            - { name: 'hook.event_listener', event: 'order-invoice.payment-extra', type: 'front', method: 'onPaymentExtra' }
+
+    # Event subscriber is autoconfigured via EventSubscriberInterface
+    CawlPayment\EventListeners\PaymentOptionsListener: ~

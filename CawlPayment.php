@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace CawlPayment;
 
 use CawlPayment\Service\CawlApiService;
+use CawlPayment\Service\CredentialsEncryptionService;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Thelia\Model\Order;
 use Thelia\Module\AbstractPaymentModule;
 use Thelia\Core\Install\Database;
+use Thelia\Log\Tlog;
 use Thelia\Tools\URL;
 
 /**
@@ -76,6 +78,9 @@ class CawlPayment extends AbstractPaymentModule
         'vouchers' => 'Titres restaurant',
     ];
 
+    /** @var CredentialsEncryptionService|null Singleton instance for credential decryption */
+    private static ?CredentialsEncryptionService $encryptionService = null;
+
     /**
      * Called when customer pays with this module
      * Creates a hosted checkout on CAWL and redirects customer to payment page
@@ -107,7 +112,7 @@ class CawlPayment extends AbstractPaymentModule
 
         } catch (\Exception $e) {
             // Log error with full details
-            \Thelia\Log\Tlog::getInstance()->error('[CawlPayment] Payment error: ' . $e->getMessage());
+            Tlog::getInstance()->error('[CawlPayment] Payment error: ' . $e->getMessage());
 
             // Redirect to failure page with generic message (don't expose internal error details)
             return new RedirectResponse(
@@ -162,21 +167,39 @@ class CawlPayment extends AbstractPaymentModule
 
     /**
      * Post activation - create database tables
+     *
+     * Uses Thelia's standard is_initialized flag pattern to prevent
+     * duplicate database insertions during module re-activation.
      */
     public function postActivation(ConnectionInterface $con = null): void
     {
-        $database = new Database($con);
+        // Check if module has already been initialized using Thelia's standard pattern
+        if (self::getConfigValue('is_initialized', false)) {
+            Tlog::getInstance()->info('[CawlPayment] Module already initialized, skipping database setup');
+            return;
+        }
 
         try {
-            // Check if table already exists
-            $stmt = $con->prepare("SHOW TABLES LIKE 'cawl_transaction'");
-            $stmt->execute();
-
-            if ($stmt->rowCount() === 0) {
-                $database->insertSql(null, [__DIR__ . '/Config/TheliaMain.sql']);
-            }
-        } catch (\Exception $e) {
+            $database = new Database($con);
             $database->insertSql(null, [__DIR__ . '/Config/TheliaMain.sql']);
+
+            // Mark module as initialized
+            self::setConfigValue('is_initialized', true);
+
+            Tlog::getInstance()->info('[CawlPayment] Module successfully initialized, database tables created');
+
+        } catch (\Exception $e) {
+            // Log the error with full details for debugging
+            Tlog::getInstance()->error(
+                '[CawlPayment] Failed to initialize module: ' . $e->getMessage()
+            );
+
+            // Re-throw to signal activation failure to Thelia
+            throw new \RuntimeException(
+                'CawlPayment module initialization failed: ' . $e->getMessage(),
+                0,
+                $e
+            );
         }
     }
 
@@ -298,21 +321,21 @@ class CawlPayment extends AbstractPaymentModule
     }
 
     /**
-     * Get active API Key based on environment
+     * Get active API Key based on environment (decrypted)
      */
     public function getActiveApiKey(): string
     {
         $suffix = $this->isProductionMode() ? '_prod' : '_test';
-        return self::getConfigValue('api_key' . $suffix, '');
+        return $this->getDecryptedConfigValue('api_key' . $suffix, '');
     }
 
     /**
-     * Get active API Secret based on environment
+     * Get active API Secret based on environment (decrypted)
      */
     public function getActiveApiSecret(): string
     {
         $suffix = $this->isProductionMode() ? '_prod' : '_test';
-        return self::getConfigValue('api_secret' . $suffix, '');
+        return $this->getDecryptedConfigValue('api_secret' . $suffix, '');
     }
 
     /**
@@ -324,21 +347,67 @@ class CawlPayment extends AbstractPaymentModule
     }
 
     /**
-     * Get active Webhook Key based on environment
+     * Get active Webhook Key based on environment (decrypted)
      */
     public function getActiveWebhookKey(): string
     {
         $suffix = $this->isProductionMode() ? '_prod' : '_test';
-        return self::getConfigValue('webhook_key' . $suffix, '');
+        return $this->getDecryptedConfigValue('webhook_key' . $suffix, '');
     }
 
     /**
-     * Get active Webhook Secret based on environment
+     * Get active Webhook Secret based on environment (decrypted)
      */
     public function getActiveWebhookSecret(): string
     {
         $suffix = $this->isProductionMode() ? '_prod' : '_test';
-        return self::getConfigValue('webhook_secret' . $suffix, '');
+        return $this->getDecryptedConfigValue('webhook_secret' . $suffix, '');
+    }
+
+    /**
+     * Get a decrypted config value for sensitive credentials
+     *
+     * Cette methode recupere une valeur de configuration et la dechiffre
+     * si elle est chiffree. Supporte les valeurs legacy (non chiffrees).
+     *
+     * @param string $key Le nom de la cle de configuration
+     * @param string $default La valeur par defaut si la cle n'existe pas
+     * @return string La valeur en clair
+     */
+    private function getDecryptedConfigValue(string $key, string $default = ''): string
+    {
+        $value = self::getConfigValue($key, $default);
+
+        if (empty($value)) {
+            return $default;
+        }
+
+        $encryptionService = $this->getEncryptionService();
+
+        if ($encryptionService->isSensitiveKey($key)) {
+            try {
+                $value = $encryptionService->decrypt($value);
+            } catch (\Exception $e) {
+                Tlog::getInstance()->error(
+                    '[CawlPayment] Failed to decrypt config value for key "' . $key . '": ' . $e->getMessage()
+                );
+                return $default;
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * Get the encryption service instance (singleton)
+     */
+    private function getEncryptionService(): CredentialsEncryptionService
+    {
+        if (self::$encryptionService === null) {
+            self::$encryptionService = new CredentialsEncryptionService();
+        }
+
+        return self::$encryptionService;
     }
 
     /**

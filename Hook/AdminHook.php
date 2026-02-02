@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CawlPayment\Hook;
 
 use CawlPayment\CawlPayment;
+use CawlPayment\Service\CsrfTokenService;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
 
@@ -13,6 +14,10 @@ use Thelia\Core\Hook\BaseHook;
  */
 class AdminHook extends BaseHook
 {
+    public function __construct(
+        private readonly CsrfTokenService $csrfTokenService
+    ) {
+    }
     /**
      * Render module configuration content
      */
@@ -46,6 +51,8 @@ class AdminHook extends BaseHook
             'checkout_description' => CawlPayment::getConfigValue('checkout_description', ''),
             'min_amount' => CawlPayment::getConfigValue('min_amount', '0'),
             'max_amount' => CawlPayment::getConfigValue('max_amount', '0'),
+            'webhook_ip_whitelist' => CawlPayment::getConfigValue('webhook_ip_whitelist', ''),
+            'webhook_whitelist_enabled' => CawlPayment::getConfigValue('webhook_whitelist_enabled', '1'),
         ];
 
         // Parse enabled methods into array
@@ -62,21 +69,12 @@ class AdminHook extends BaseHook
         $hasTestCredentials = !empty($config['api_key_test']) && !empty($config['api_secret_test']);
         $hasProdCredentials = !empty($config['api_key_prod']) && !empty($config['api_secret_prod']);
 
-        // Get CSRF token using null-safe request access
+        // Generate CSRF token using the dedicated service
         $formToken = '';
         try {
-            $request = $this->getRequest();
-            if ($request !== null && $request->hasSession()) {
-                $session = $request->getSession();
-                $formToken = $session->get('cawlpayment_token');
-                if (empty($formToken)) {
-                    $formToken = bin2hex(random_bytes(32));
-                    $session->set('cawlpayment_token', $formToken);
-                }
-            } else {
-                $formToken = bin2hex(random_bytes(32));
-            }
+            $formToken = $this->csrfTokenService->generateToken();
         } catch (\Throwable $e) {
+            // Fallback: generate a random token if service fails (e.g., no session)
             $formToken = bin2hex(random_bytes(32));
         }
 

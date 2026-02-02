@@ -134,6 +134,20 @@ class ConfigurationForm extends BaseForm
                 'required' => false,
                 'scale' => 2,
             ])
+
+            // === SECURITY TAB ===
+            ->add('webhook_whitelist_enabled', CheckboxType::class, [
+                'label' => $this->trans('Enable IP whitelist for webhooks'),
+                'label_attr' => ['help' => $this->trans('When disabled in test mode, all IPs are allowed')],
+                'required' => false,
+            ])
+
+            ->add('webhook_ip_whitelist', TextareaType::class, [
+                'label' => $this->trans('Webhook IP Whitelist'),
+                'label_attr' => ['help' => $this->trans('Comma-separated list of allowed IPs or CIDR ranges (e.g., 192.168.1.1, 10.0.0.0/8)')],
+                'required' => false,
+                'attr' => ['rows' => 3],
+            ])
         ;
     }
 

@@ -6,9 +6,12 @@ namespace CawlPayment\Controller\Admin;
 
 use CawlPayment\CawlPayment;
 use CawlPayment\Service\CawlApiService;
+use CawlPayment\Service\CsrfTokenService;
+use CawlPayment\Service\SecureConfigService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Core\Security\SecurityContext;
@@ -20,7 +23,9 @@ use Thelia\Tools\URL;
 class ConfigurationController
 {
     public function __construct(
-        private readonly SecurityContext $securityContext
+        private readonly SecurityContext $securityContext,
+        private readonly CsrfTokenService $csrfTokenService,
+        private readonly SecureConfigService $secureConfigService
     ) {
     }
 
@@ -44,6 +49,7 @@ class ConfigurationController
     /**
      * Save configuration
      */
+    #[Route(path: '/admin/cawlpayment/configure', name: 'cawlpayment.admin.configure', methods: ['POST'])]
     public function saveAction(Request $request): RedirectResponse
     {
         if (!$this->checkAdminAccess(AccessManager::UPDATE)) {
@@ -52,9 +58,19 @@ class ConfigurationController
             );
         }
 
+        // Get form data directly from request
+        $formData = $request->request->all('cawlpayment_configuration');
+
+        // CSRF Token Validation
+        $submittedToken = $formData['_token'] ?? null;
+
+        if (!$this->csrfTokenService->validateToken($submittedToken)) {
+            return new RedirectResponse(
+                URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', ['error' => 'Invalid security token. Please try again.'])
+            );
+        }
+
         try {
-            // Get form data directly from request
-            $formData = $request->request->all('cawlpayment_configuration');
 
             // Save credentials
             if (isset($formData['pspid'])) {
@@ -62,31 +78,32 @@ class ConfigurationController
             }
 
             // Only update API keys if they're not empty (allow keeping existing values)
+            // Use SecureConfigService to encrypt sensitive credentials
             if (!empty($formData['api_key_test'])) {
-                CawlPayment::setConfigValue('api_key_test', $formData['api_key_test']);
+                $this->secureConfigService->setConfigValue('api_key_test', $formData['api_key_test']);
             }
             if (!empty($formData['api_secret_test'])) {
-                CawlPayment::setConfigValue('api_secret_test', $formData['api_secret_test']);
+                $this->secureConfigService->setConfigValue('api_secret_test', $formData['api_secret_test']);
             }
             if (!empty($formData['api_key_prod'])) {
-                CawlPayment::setConfigValue('api_key_prod', $formData['api_key_prod']);
+                $this->secureConfigService->setConfigValue('api_key_prod', $formData['api_key_prod']);
             }
             if (!empty($formData['api_secret_prod'])) {
-                CawlPayment::setConfigValue('api_secret_prod', $formData['api_secret_prod']);
+                $this->secureConfigService->setConfigValue('api_secret_prod', $formData['api_secret_prod']);
             }
 
-            // Save webhook keys
+            // Save webhook keys (encrypted via SecureConfigService)
             if (isset($formData['webhook_key_test'])) {
-                CawlPayment::setConfigValue('webhook_key_test', $formData['webhook_key_test']);
+                $this->secureConfigService->setConfigValue('webhook_key_test', $formData['webhook_key_test']);
             }
             if (!empty($formData['webhook_secret_test'])) {
-                CawlPayment::setConfigValue('webhook_secret_test', $formData['webhook_secret_test']);
+                $this->secureConfigService->setConfigValue('webhook_secret_test', $formData['webhook_secret_test']);
             }
             if (isset($formData['webhook_key_prod'])) {
-                CawlPayment::setConfigValue('webhook_key_prod', $formData['webhook_key_prod']);
+                $this->secureConfigService->setConfigValue('webhook_key_prod', $formData['webhook_key_prod']);
             }
             if (!empty($formData['webhook_secret_prod'])) {
-                CawlPayment::setConfigValue('webhook_secret_prod', $formData['webhook_secret_prod']);
+                $this->secureConfigService->setConfigValue('webhook_secret_prod', $formData['webhook_secret_prod']);
             }
 
             // Save environment
@@ -103,6 +120,11 @@ class ConfigurationController
             CawlPayment::setConfigValue('min_amount', $formData['min_amount'] ?? '0');
             CawlPayment::setConfigValue('max_amount', $formData['max_amount'] ?? '0');
 
+            // Save webhook IP whitelist settings
+            CawlPayment::setConfigValue('webhook_ip_whitelist', $formData['webhook_ip_whitelist'] ?? '');
+            $webhookWhitelistEnabled = isset($formData['webhook_whitelist_enabled']) ? '1' : '0';
+            CawlPayment::setConfigValue('webhook_whitelist_enabled', $webhookWhitelistEnabled);
+
             return new RedirectResponse(
                 URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', ['success' => '1'])
             );
@@ -117,6 +139,7 @@ class ConfigurationController
     /**
      * Get available payment products from API (with caching)
      */
+    #[Route(path: '/admin/module/CawlPayment/payment-products', name: 'cawlpayment.admin.payment_products', methods: ['GET'])]
     public function paymentProductsAction(Request $request): JsonResponse
     {
         if (!$this->checkAdminAccess(AccessManager::VIEW)) {
@@ -145,6 +168,7 @@ class ConfigurationController
     /**
      * Test API connection
      */
+    #[Route(path: '/admin/module/CawlPayment/test-connection', name: 'cawlpayment.admin.test_connection', methods: ['POST'])]
     public function testConnectionAction(Request $request): JsonResponse
     {
         if (!$this->checkAdminAccess(AccessManager::VIEW)) {

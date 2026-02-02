@@ -7,3 +7,7 @@
 
 # Vendor
 vendor/
+
+# PHPUnit
+.phpunit.cache/
+phpunit.xml
