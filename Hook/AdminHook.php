@@ -6,17 +6,47 @@ namespace CawlPayment\Hook;
 
 use CawlPayment\CawlPayment;
 use CawlPayment\Service\CsrfTokenService;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
+use Thelia\Core\Template\Parser\ParserResolver;
+use Thelia\Core\Translation\Translator;
 
 /**
  * Admin hook for CAWL Payment module configuration
  *
- * Note: Les hooks Thelia ne supportent pas l'injection de dépendances via constructeur
- * dans config.xml. On utilise le container hérité de BaseHook.
+ * Note: Le constructeur est surchargé pour éviter un bug OPcache dans BaseHook
+ * où l'instanciation du module via `new $moduleClass()` échoue à cause d'une
+ * désynchronisation de la hiérarchie de classes dans le cache PHP.
+ * Le module est injecté par Symfony DI via la propriété $module.
  */
 class AdminHook extends BaseHook
 {
+    /**
+     * Override constructor to skip problematic module instantiation in BaseHook.
+     *
+     * BaseHook::__construct() tries to instantiate the module via `new $moduleClass()`
+     * which fails with OPcache due to class hierarchy caching issues.
+     * Since Symfony DI injects the module via property, we skip that part.
+     */
+    public function __construct(
+        ?EventDispatcherInterface $dispatcher = null,
+        ?ParserResolver $parserResolver = null,
+    ) {
+        if ($dispatcher instanceof EventDispatcherInterface) {
+            $this->dispatcher = $dispatcher;
+        }
+
+        if ($parserResolver instanceof ParserResolver) {
+            $this->parserResolver = $parserResolver;
+        }
+
+        // Skip module instantiation - it will be injected by Symfony DI
+        // This avoids the OPcache bug: "Cannot assign CawlPayment to property $module"
+
+        $this->translator = Translator::getInstance();
+    }
+
     /**
      * Render module configuration content
      */

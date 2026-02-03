@@ -6,15 +6,40 @@ namespace CawlPayment\Hook;
 
 use CawlPayment\CawlPayment;
 use CawlPayment\Service\CawlApiService;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
+use Thelia\Core\Template\Parser\ParserResolver;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\ModuleQuery;
 
 /**
  * Front office hooks for CAWL Payment module
+ *
+ * Note: Le constructeur est surchargé pour éviter un bug OPcache dans BaseHook.
  */
 class FrontHook extends BaseHook
 {
+    /**
+     * Override constructor to skip problematic module instantiation in BaseHook.
+     */
+    public function __construct(
+        ?EventDispatcherInterface $dispatcher = null,
+        ?ParserResolver $parserResolver = null,
+    ) {
+        if ($dispatcher instanceof EventDispatcherInterface) {
+            $this->dispatcher = $dispatcher;
+        }
+
+        if ($parserResolver instanceof ParserResolver) {
+            $this->parserResolver = $parserResolver;
+        }
+
+        // Skip module instantiation - it will be injected by Symfony DI
+
+        $this->translator = Translator::getInstance();
+    }
+
     /**
      * Display payment method options in the checkout
      * This hook is called for each payment module in order-invoice.payment-extra
