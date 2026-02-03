@@ -92,6 +92,7 @@ class CawlPayment extends AbstractPaymentModule
      */
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
+        // Services autowiring (excluding Thelia-managed classes and controllers)
         $servicesConfigurator->load(self::MODULE_CODE.'\\', __DIR__)
             ->exclude([
                 THELIA_MODULE_DIR.self::MODULE_CODE.'/I18n/*',
@@ -100,9 +101,17 @@ class CawlPayment extends AbstractPaymentModule
                 THELIA_MODULE_DIR.self::MODULE_CODE.'/Hook/*',
                 THELIA_MODULE_DIR.self::MODULE_CODE.'/Loop/*',
                 THELIA_MODULE_DIR.self::MODULE_CODE.'/Form/*',
+                THELIA_MODULE_DIR.self::MODULE_CODE.'/Controller/*',
             ])
             ->autowire(true)
             ->autoconfigure(true);
+
+        // Controllers must be public and tagged for routing
+        $servicesConfigurator->load(self::MODULE_CODE.'\\Controller\\', __DIR__.'/Controller/')
+            ->autowire(true)
+            ->autoconfigure(true)
+            ->public()
+            ->tag('controller.service_arguments');
     }
 
     /**
