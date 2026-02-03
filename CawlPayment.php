@@ -85,33 +85,15 @@ class CawlPayment extends AbstractPaymentModule
     /**
      * Configure services for dependency injection
      *
-     * Cette méthode est appelée par Thelia pour charger et configurer
-     * les services du module avec autowiring Symfony.
-     *
-     * @see https://github.com/thelia-modules/CustomerFamily/blob/main/CustomerFamily.php#L133
+     * Pattern identique au module OpenApi officiel de Thelia.
+     * Seul I18n est exclu, le reste est géré par autowiring/autoconfigure.
      */
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
-        // Services autowiring (excluding Thelia-managed classes and controllers)
-        $servicesConfigurator->load(self::MODULE_CODE.'\\', __DIR__)
-            ->exclude([
-                THELIA_MODULE_DIR.self::MODULE_CODE.'/I18n/*',
-                THELIA_MODULE_DIR.self::MODULE_CODE.'/Config/*',
-                THELIA_MODULE_DIR.self::MODULE_CODE.'/Model/*',
-                THELIA_MODULE_DIR.self::MODULE_CODE.'/Hook/*',
-                THELIA_MODULE_DIR.self::MODULE_CODE.'/Loop/*',
-                THELIA_MODULE_DIR.self::MODULE_CODE.'/Form/*',
-                THELIA_MODULE_DIR.self::MODULE_CODE.'/Controller/*',
-            ])
+        $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
+            ->exclude([THELIA_MODULE_DIR.ucfirst(self::getModuleCode()).'/I18n/*'])
             ->autowire(true)
             ->autoconfigure(true);
-
-        // Controllers must be public and tagged for routing
-        $servicesConfigurator->load(self::MODULE_CODE.'\\Controller\\', __DIR__.'/Controller/')
-            ->autowire(true)
-            ->autoconfigure(true)
-            ->public()
-            ->tag('controller.service_arguments');
     }
 
     /**
