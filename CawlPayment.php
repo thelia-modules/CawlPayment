@@ -85,13 +85,13 @@ class CawlPayment extends AbstractPaymentModule
     /**
      * Configure services for dependency injection
      *
-     * Pattern identique au module OpenApi officiel de Thelia.
-     * Seul I18n est exclu, le reste est géré par autowiring/autoconfigure.
+     * Note: Utilise __DIR__ pour l'exclusion car le module est dans local/modules,
+     * pas dans vendor/thelia/modules (THELIA_MODULE_DIR).
      */
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
-            ->exclude([THELIA_MODULE_DIR.ucfirst(self::getModuleCode()).'/I18n/*'])
+            ->exclude([__DIR__.'/I18n/*'])
             ->autowire(true)
             ->autoconfigure(true);
     }
