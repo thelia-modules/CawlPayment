@@ -188,6 +188,29 @@ https://votre-site.com/cawlpayment/webhook
 - `payment.rejected` - Paiement rejeté
 - `payment.refunded` - Remboursement effectué
 
+#### Sécurité Webhook - Whitelist IP
+
+Pour renforcer la sécurité des webhooks, vous pouvez activer une whitelist d'adresses IP autorisées. Seules les requêtes provenant des IP listées seront acceptées.
+
+| Option | Description |
+|--------|-------------|
+| **Activer la whitelist** | Active/désactive la vérification des IP sources |
+| **Liste des IP autorisées** | Liste des adresses IP séparées par des virgules |
+
+**IP Worldline à autoriser :**
+
+```
+# Environnement de test (preprod)
+91.208.214.0/24
+185.8.52.0/22
+
+# Environnement de production
+91.208.214.0/24
+185.8.52.0/22
+```
+
+> **Note** : La whitelist IP est une couche de sécurité supplémentaire. La validation de signature HMAC-SHA256 reste la méthode principale de vérification.
+
 ---
 
 ## Méthodes de paiement supportées
