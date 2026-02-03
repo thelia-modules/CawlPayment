@@ -11,13 +11,12 @@ use Thelia\Core\Hook\BaseHook;
 
 /**
  * Admin hook for CAWL Payment module configuration
+ *
+ * Note: Les hooks Thelia ne supportent pas l'injection de dépendances via constructeur
+ * dans config.xml. On utilise le container hérité de BaseHook.
  */
 class AdminHook extends BaseHook
 {
-    public function __construct(
-        private readonly CsrfTokenService $csrfTokenService
-    ) {
-    }
     /**
      * Render module configuration content
      */
@@ -69,12 +68,18 @@ class AdminHook extends BaseHook
         $hasTestCredentials = !empty($config['api_key_test']) && !empty($config['api_secret_test']);
         $hasProdCredentials = !empty($config['api_key_prod']) && !empty($config['api_secret_prod']);
 
-        // Generate CSRF token using the dedicated service
+        // Generate CSRF token using the container to get the service
         $formToken = '';
         try {
-            $formToken = $this->csrfTokenService->generateToken();
+            if ($this->container->has(CsrfTokenService::class)) {
+                $csrfTokenService = $this->container->get(CsrfTokenService::class);
+                $formToken = $csrfTokenService->generateToken();
+            } else {
+                // Fallback: generate a random token
+                $formToken = bin2hex(random_bytes(32));
+            }
         } catch (\Throwable $e) {
-            // Fallback: generate a random token if service fails (e.g., no session)
+            // Fallback: generate a random token if service fails
             $formToken = bin2hex(random_bytes(32));
         }
 
