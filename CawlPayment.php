@@ -90,13 +90,22 @@ class CawlPayment extends AbstractPaymentModule
      */
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
+        // Services généraux (hors controllers)
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
             ->exclude([
                 __DIR__.'/I18n/*',
                 __DIR__.'/Tests/*',
+                __DIR__.'/Controller/*',
             ])
             ->autowire(true)
             ->autoconfigure(true);
+
+        // Controllers doivent être publics avec le tag controller.service_arguments
+        $servicesConfigurator->load(self::getModuleCode().'\\Controller\\', __DIR__.'/Controller/')
+            ->autowire(true)
+            ->autoconfigure(true)
+            ->public()
+            ->tag('controller.service_arguments');
     }
 
     /**
