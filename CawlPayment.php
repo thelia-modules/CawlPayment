@@ -7,6 +7,7 @@ namespace CawlPayment;
 use CawlPayment\Service\CawlApiService;
 use CawlPayment\Service\CredentialsEncryptionService;
 use Propel\Runtime\Connection\ConnectionInterface;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Thelia\Model\Order;
@@ -80,6 +81,26 @@ class CawlPayment extends AbstractPaymentModule
 
     /** @var CredentialsEncryptionService|null Singleton instance for credential decryption */
     private static ?CredentialsEncryptionService $encryptionService = null;
+
+    /**
+     * Configure services for dependency injection
+     *
+     * Cette méthode est appelée par Thelia pour charger et configurer
+     * les services du module avec autowiring Symfony.
+     *
+     * @see https://github.com/thelia-modules/CustomerFamily/blob/main/CustomerFamily.php#L133
+     */
+    public static function configureServices(ServicesConfigurator $servicesConfigurator): void
+    {
+        $servicesConfigurator->load(self::MODULE_CODE.'\\', __DIR__)
+            ->exclude([
+                THELIA_MODULE_DIR.self::MODULE_CODE.'/I18n/*',
+                THELIA_MODULE_DIR.self::MODULE_CODE.'/Config/*',
+                THELIA_MODULE_DIR.self::MODULE_CODE.'/Model/*',
+            ])
+            ->autowire(true)
+            ->autoconfigure(true);
+    }
 
     /**
      * Called when customer pays with this module

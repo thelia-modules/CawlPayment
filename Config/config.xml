@@ -13,55 +13,14 @@
         <form name="cawlpayment.configuration" class="CawlPayment\Form\ConfigurationForm" />
     </forms>
 
-    <!-- Services -->
-    <services>
-        <!-- Security Services -->
-        <service id="CawlPayment\Service\CsrfTokenService" class="CawlPayment\Service\CsrfTokenService">
-            <argument type="service" id="request_stack"/>
-        </service>
-
-        <service id="CawlPayment\Service\CredentialsEncryptionService" class="CawlPayment\Service\CredentialsEncryptionService"/>
-
-        <service id="CawlPayment\Service\SecureConfigService" class="CawlPayment\Service\SecureConfigService">
-            <argument type="service" id="CawlPayment\Service\CredentialsEncryptionService"/>
-        </service>
-
-        <service id="CawlPayment\Service\IpWhitelistService" class="CawlPayment\Service\IpWhitelistService"/>
-
-        <!-- Controllers -->
-        <service id="CawlPayment\Controller\Admin\ConfigurationController" class="CawlPayment\Controller\Admin\ConfigurationController" public="true">
-            <argument type="service" id="thelia.securityContext"/>
-            <argument type="service" id="CawlPayment\Service\CsrfTokenService"/>
-            <argument type="service" id="CawlPayment\Service\SecureConfigService"/>
-            <tag name="controller.service_arguments"/>
-        </service>
-
-        <service id="CawlPayment\Controller\Admin\TestController" class="CawlPayment\Controller\Admin\TestController" public="true">
-            <argument type="service" id="thelia.securityContext"/>
-            <tag name="controller.service_arguments"/>
-        </service>
-
-        <service id="CawlPayment\Controller\Front\PaymentController" class="CawlPayment\Controller\Front\PaymentController" public="true">
-            <argument type="service" id="event_dispatcher"/>
-            <tag name="controller.service_arguments"/>
-        </service>
-
-        <service id="CawlPayment\Controller\Front\WebhookController" class="CawlPayment\Controller\Front\WebhookController" public="true">
-            <argument type="service" id="event_dispatcher"/>
-            <argument type="service" id="CawlPayment\Service\IpWhitelistService"/>
-            <tag name="controller.service_arguments"/>
-        </service>
-
-        <service id="CawlPayment\Controller\Front\AssetController" class="CawlPayment\Controller\Front\AssetController" public="true">
-            <tag name="controller.service_arguments"/>
-        </service>
-    </services>
-
-    <!-- Hooks -->
+    <!-- Hooks Thelia - nécessitent des tags spécifiques non gérés par autoconfigure -->
     <hooks>
         <hook id="cawlpayment.hook.admin" class="CawlPayment\Hook\AdminHook">
             <argument type="service" id="CawlPayment\Service\CsrfTokenService"/>
             <tag name="hook.event_listener" event="module.configuration" type="back" method="onModuleConfiguration" />
+        </hook>
+        <hook id="cawlpayment.hook.front" class="CawlPayment\Hook\FrontHook">
+            <tag name="hook.event_listener" event="order-invoice.payment-extra" type="front" method="onPaymentExtra" />
         </hook>
     </hooks>
 
