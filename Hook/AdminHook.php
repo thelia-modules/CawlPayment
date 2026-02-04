@@ -32,7 +32,6 @@ class AdminHook extends BaseHook
     public function __construct(
         ?EventDispatcherInterface $dispatcher = null,
         ?ParserResolver $parserResolver = null,
-        private ?CsrfTokenService $csrfTokenService = null,
     ) {
         if ($dispatcher instanceof EventDispatcherInterface) {
             $this->dispatcher = $dispatcher;
@@ -99,12 +98,18 @@ class AdminHook extends BaseHook
         $hasTestCredentials = !empty($config['api_key_test']) && !empty($config['api_secret_test']);
         $hasProdCredentials = !empty($config['api_key_prod']) && !empty($config['api_secret_prod']);
 
-        // Generate CSRF token using the injected service
+        // Generate CSRF token using the container (CsrfTokenService is now public)
         $formToken = '';
-        if ($this->csrfTokenService !== null) {
-            $formToken = $this->csrfTokenService->generateToken();
-        } else {
-            // Fallback: generate a random token (shouldn't happen with proper DI)
+        try {
+            if ($this->container !== null && $this->container->has(CsrfTokenService::class)) {
+                $csrfTokenService = $this->container->get(CsrfTokenService::class);
+                $formToken = $csrfTokenService->generateToken();
+            } else {
+                // Fallback: generate a random token (shouldn't happen with proper config)
+                $formToken = bin2hex(random_bytes(32));
+            }
+        } catch (\Throwable $e) {
+            // Fallback: generate a random token if service fails
             $formToken = bin2hex(random_bytes(32));
         }
 
