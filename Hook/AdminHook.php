@@ -23,6 +23,11 @@ use Thelia\Core\Translation\Translator;
 class AdminHook extends BaseHook
 {
     /**
+     * @var CsrfTokenService|null Service de gestion des tokens CSRF
+     */
+    private ?CsrfTokenService $csrfTokenService = null;
+
+    /**
      * Override constructor to skip problematic module instantiation in BaseHook.
      *
      * BaseHook::__construct() tries to instantiate the module via `new $moduleClass()`
@@ -32,6 +37,7 @@ class AdminHook extends BaseHook
     public function __construct(
         ?EventDispatcherInterface $dispatcher = null,
         ?ParserResolver $parserResolver = null,
+        ?CsrfTokenService $csrfTokenService = null,
     ) {
         if ($dispatcher instanceof EventDispatcherInterface) {
             $this->dispatcher = $dispatcher;
@@ -40,6 +46,9 @@ class AdminHook extends BaseHook
         if ($parserResolver instanceof ParserResolver) {
             $this->parserResolver = $parserResolver;
         }
+
+        // Store the CSRF token service for later use
+        $this->csrfTokenService = $csrfTokenService;
 
         // Skip module instantiation - it will be injected by Symfony DI
         // This avoids the OPcache bug: "Cannot assign CawlPayment to property $module"
@@ -98,18 +107,12 @@ class AdminHook extends BaseHook
         $hasTestCredentials = !empty($config['api_key_test']) && !empty($config['api_secret_test']);
         $hasProdCredentials = !empty($config['api_key_prod']) && !empty($config['api_secret_prod']);
 
-        // Generate CSRF token using the container (CsrfTokenService is now public)
+        // Generate CSRF token using the injected service
         $formToken = '';
-        try {
-            if ($this->container !== null && $this->container->has(CsrfTokenService::class)) {
-                $csrfTokenService = $this->container->get(CsrfTokenService::class);
-                $formToken = $csrfTokenService->generateToken();
-            } else {
-                // Fallback: generate a random token (shouldn't happen with proper config)
-                $formToken = bin2hex(random_bytes(32));
-            }
-        } catch (\Throwable $e) {
-            // Fallback: generate a random token if service fails
+        if ($this->csrfTokenService !== null) {
+            $formToken = $this->csrfTokenService->generateToken();
+        } else {
+            // Fallback: generate a random token (shouldn't happen with proper DI)
             $formToken = bin2hex(random_bytes(32));
         }
 
