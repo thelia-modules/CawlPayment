@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace CawlPayment\Hook;
 
 use CawlPayment\CawlPayment;
-use CawlPayment\Service\CsrfTokenService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
@@ -23,9 +22,9 @@ use Thelia\Core\Translation\Translator;
 class AdminHook extends BaseHook
 {
     /**
-     * @var CsrfTokenService|null Service de gestion des tokens CSRF
+     * Clé de session pour le token CSRF
      */
-    private ?CsrfTokenService $csrfTokenService = null;
+    private const CSRF_TOKEN_KEY = 'cawlpayment_csrf_token';
 
     /**
      * Override constructor to skip problematic module instantiation in BaseHook.
@@ -37,7 +36,6 @@ class AdminHook extends BaseHook
     public function __construct(
         ?EventDispatcherInterface $dispatcher = null,
         ?ParserResolver $parserResolver = null,
-        ?CsrfTokenService $csrfTokenService = null,
     ) {
         if ($dispatcher instanceof EventDispatcherInterface) {
             $this->dispatcher = $dispatcher;
@@ -46,9 +44,6 @@ class AdminHook extends BaseHook
         if ($parserResolver instanceof ParserResolver) {
             $this->parserResolver = $parserResolver;
         }
-
-        // Store the CSRF token service for later use
-        $this->csrfTokenService = $csrfTokenService;
 
         // Skip module instantiation - it will be injected by Symfony DI
         // This avoids the OPcache bug: "Cannot assign CawlPayment to property $module"
@@ -107,14 +102,9 @@ class AdminHook extends BaseHook
         $hasTestCredentials = !empty($config['api_key_test']) && !empty($config['api_secret_test']);
         $hasProdCredentials = !empty($config['api_key_prod']) && !empty($config['api_secret_prod']);
 
-        // Generate CSRF token using the injected service
-        $formToken = '';
-        if ($this->csrfTokenService !== null) {
-            $formToken = $this->csrfTokenService->generateToken();
-        } else {
-            // Fallback: generate a random token (shouldn't happen with proper DI)
-            $formToken = bin2hex(random_bytes(32));
-        }
+        // Generate CSRF token and store directly in session
+        $formToken = bin2hex(random_bytes(32));
+        $this->getSession()->set(self::CSRF_TOKEN_KEY, $formToken);
 
         $event->add($this->render('module-configuration.html', [
             'config' => $config,

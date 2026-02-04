@@ -263,4 +263,7 @@ return [
     'Access denied' => 'Accès refusé',
     'Not authenticated' => 'Non authentifié',
     'Paid order status not found' => 'Statut de commande payée non trouvé',
+
+    // Security messages
+    'Invalid security token. Please try again.' => 'Jeton de sécurité invalide. Veuillez réessayer.',
 ];
