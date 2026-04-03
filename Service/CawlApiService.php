@@ -515,12 +515,12 @@ class CawlApiService
     /**
      * Process webhook notification
      */
-    public function processWebhook(array $payload, string $signature): array
+    public function processWebhook(array $payload, string $signature, string $rawBody = ''): array
     {
         $this->log("Processing webhook notification");
 
-        // Verify signature
-        if (!$this->verifyWebhookSignature($payload, $signature)) {
+        // Verify signature using raw body to preserve original encoding
+        if (!$this->verifyWebhookSignature($rawBody ?: json_encode($payload), $signature)) {
             $this->log("Invalid webhook signature", 'error');
             return [
                 'success' => false,
@@ -577,7 +577,7 @@ class CawlApiService
     /**
      * Verify webhook signature
      */
-    private function verifyWebhookSignature(array $payload, string $signature): bool
+    private function verifyWebhookSignature(string $rawBody, string $signature): bool
     {
         $webhookSecret = $this->module->getActiveWebhookSecret();
 
@@ -597,8 +597,8 @@ class CawlApiService
             return false;
         }
 
-        // CAWL uses HMAC-SHA256 with the raw body
-        $expectedSignature = base64_encode(hash_hmac('sha256', json_encode($payload), $webhookSecret, true));
+        // CAWL uses HMAC-SHA256 with the raw HTTP body (not re-encoded JSON)
+        $expectedSignature = base64_encode(hash_hmac('sha256', $rawBody, $webhookSecret, true));
 
         // Use hash_equals to prevent timing attacks
         $isValid = hash_equals($expectedSignature, $signature);

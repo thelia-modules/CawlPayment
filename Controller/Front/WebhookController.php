@@ -76,7 +76,7 @@ class WebhookController extends BaseFrontController
             // Process webhook
             $apiService = new CawlApiService();
 
-            $result = $apiService->processWebhook($payload, $signature);
+            $result = $apiService->processWebhook($payload, $signature, $rawBody);
 
             if (!$result['success']) {
                 $logger->addError('[CawlPayment Webhook] Processing failed: ' . ($result['error'] ?? 'Unknown'));
