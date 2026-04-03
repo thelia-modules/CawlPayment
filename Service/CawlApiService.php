@@ -29,13 +29,12 @@ use Thelia\Model\Order;
  */
 class CawlApiService
 {
-    private CawlPayment $module;
     private ?Tlog $logger = null;
     private ?Client $client = null;
 
-    public function __construct()
-    {
-        $this->module = new CawlPayment();
+    public function __construct(
+        private readonly CredentialsEncryptionService $encryptionService
+    ) {
     }
 
     /**
@@ -56,9 +55,77 @@ class CawlApiService
      */
     private function log(string $message, string $level = 'info'): void
     {
-        if ($this->module->isLoggingEnabled()) {
+        if ($this->isLoggingEnabled()) {
             $this->getLogger()->$level('[CawlPayment] ' . $message);
         }
+    }
+
+    private function isLoggingEnabled(): bool
+    {
+        return (bool) CawlPayment::getConfigValue('enable_logging', true);
+    }
+
+    private function isProductionMode(): bool
+    {
+        return $this->getActiveEnvironment() === CawlPayment::ENV_PRODUCTION;
+    }
+
+    public function getActiveEnvironment(): string
+    {
+        return CawlPayment::getConfigValue('environment', CawlPayment::ENV_TEST);
+    }
+
+    public function getApiUrl(): string
+    {
+        return $this->isProductionMode() ? CawlPayment::API_URL_PROD : CawlPayment::API_URL_TEST;
+    }
+
+    private function getActiveApiKey(): string
+    {
+        $suffix = $this->isProductionMode() ? '_prod' : '_test';
+        return $this->getDecryptedConfigValue('api_key' . $suffix, '');
+    }
+
+    private function getActiveApiSecret(): string
+    {
+        $suffix = $this->isProductionMode() ? '_prod' : '_test';
+        return $this->getDecryptedConfigValue('api_secret' . $suffix, '');
+    }
+
+    private function getActiveWebhookKey(): string
+    {
+        $suffix = $this->isProductionMode() ? '_prod' : '_test';
+        return $this->getDecryptedConfigValue('webhook_key' . $suffix, '');
+    }
+
+    private function getActiveWebhookSecret(): string
+    {
+        $suffix = $this->isProductionMode() ? '_prod' : '_test';
+        return $this->getDecryptedConfigValue('webhook_secret' . $suffix, '');
+    }
+
+    /**
+     * Get a decrypted config value for sensitive credentials
+     */
+    private function getDecryptedConfigValue(string $key, string $default = ''): string
+    {
+        $value = CawlPayment::getConfigValue($key, $default);
+
+        if (empty($value)) {
+            return $default;
+        }
+
+        if ($this->encryptionService->isSensitiveKey($key)) {
+            try {
+                $value = $this->encryptionService->decrypt($value);
+            } catch (\Exception $e) {
+                Tlog::getInstance()->warning(
+                    '[CawlPayment] Could not decrypt config "' . $key . '", treating as plaintext: ' . $e->getMessage()
+                );
+            }
+        }
+
+        return $value;
     }
 
     /**
@@ -67,11 +134,11 @@ class CawlApiService
     private function getClient(): Client
     {
         if ($this->client === null) {
-            $apiKey = $this->module->getActiveApiKey();
-            $apiSecret = $this->module->getActiveApiSecret();
+            $apiKey = $this->getActiveApiKey();
+            $apiSecret = $this->getActiveApiSecret();
 
             // Determine endpoint based on environment
-            $endpoint = $this->module->isProductionMode()
+            $endpoint = $this->isProductionMode()
                 ? 'https://payment.direct.worldline-solutions.com'
                 : 'https://payment.preprod.direct.worldline-solutions.com';
 
@@ -95,7 +162,7 @@ class CawlApiService
      */
     private function getMerchantId(): string
     {
-        return $this->module->getPspid();
+        return CawlPayment::getConfigValue('pspid', '');
     }
 
     /**
@@ -116,8 +183,8 @@ class CawlApiService
 
             return [
                 'success' => true,
-                'environment' => $this->module->getActiveEnvironment(),
-                'endpoint' => $this->module->getApiUrl(),
+                'environment' => $this->getActiveEnvironment(),
+                'endpoint' => $this->getApiUrl(),
                 'merchant_id' => $merchantId,
                 'result' => $response->getResult(),
             ];
@@ -126,8 +193,8 @@ class CawlApiService
 
             return [
                 'success' => false,
-                'environment' => $this->module->getActiveEnvironment(),
-                'endpoint' => $this->module->getApiUrl(),
+                'environment' => $this->getActiveEnvironment(),
+                'endpoint' => $this->getApiUrl(),
                 'merchant_id' => $this->getMerchantId(),
                 'error' => $e->getMessage(),
                 'error_code' => $e->getCode(),
@@ -162,7 +229,7 @@ class CawlApiService
                 'timestamp' => time(),
                 'data' => $result,
             ];
-            file_put_contents($cacheFile, json_encode($cacheData));
+            file_put_contents($cacheFile, json_encode($cacheData), LOCK_EX);
         }
 
         return $result;
@@ -579,11 +646,11 @@ class CawlApiService
      */
     private function verifyWebhookSignature(string $rawBody, string $signature): bool
     {
-        $webhookSecret = $this->module->getActiveWebhookSecret();
+        $webhookSecret = $this->getActiveWebhookSecret();
 
         // SECURITY: Reject webhooks if no secret is configured in production
         if (empty($webhookSecret)) {
-            if ($this->module->isProductionMode()) {
+            if ($this->isProductionMode()) {
                 $this->log("SECURITY: No webhook secret configured in production - rejecting webhook", 'error');
                 return false;
             }
@@ -647,7 +714,7 @@ class CawlApiService
      */
     public function getCheckoutUrl(string $hostedCheckoutId, string $returnMac): string
     {
-        $baseUrl = $this->module->isProductionMode()
+        $baseUrl = $this->isProductionMode()
             ? 'https://payment.direct.worldline-solutions.com'
             : 'https://payment.preprod.direct.worldline-solutions.com';
 
@@ -680,13 +747,48 @@ class CawlApiService
     public function getConfigurationSummary(): array
     {
         return [
-            'environment' => $this->module->getActiveEnvironment(),
-            'endpoint' => $this->module->getApiUrl(),
+            'environment' => $this->getActiveEnvironment(),
+            'endpoint' => $this->getApiUrl(),
             'merchant_id' => $this->getMerchantId(),
-            'api_key_configured' => !empty($this->module->getActiveApiKey()),
-            'api_secret_configured' => !empty($this->module->getActiveApiSecret()),
-            'logging_enabled' => $this->module->isLoggingEnabled(),
-            'enabled_methods' => array_keys($this->module->getEnabledPaymentMethods()),
+            'api_key_configured' => !empty($this->getActiveApiKey()),
+            'api_secret_configured' => !empty($this->getActiveApiSecret()),
+            'logging_enabled' => $this->isLoggingEnabled(),
+            'enabled_methods' => array_keys($this->getEnabledPaymentMethods()),
         ];
+    }
+
+    /**
+     * Get list of enabled payment methods (from module config)
+     */
+    public function getEnabledPaymentMethods(): array
+    {
+        $enabled = [];
+        $enabledMethods = CawlPayment::getConfigValue('enabled_methods', '');
+
+        if (empty($enabledMethods)) {
+            return $enabled;
+        }
+
+        $methodCodes = explode(',', $enabledMethods);
+
+        foreach ($methodCodes as $code) {
+            $code = trim($code);
+
+            if (isset(CawlPayment::PAYMENT_METHODS[$code])) {
+                $enabled[$code] = CawlPayment::PAYMENT_METHODS[$code];
+            } elseif (strpos($code, 'product_') === 0) {
+                $productId = (int) substr($code, 8);
+                if ($productId > 0) {
+                    $enabled[$code] = [
+                        'id' => $productId,
+                        'name' => 'Payment ' . $productId,
+                        'category' => 'api',
+                        'icon' => '',
+                    ];
+                }
+            }
+        }
+
+        return $enabled;
     }
 }

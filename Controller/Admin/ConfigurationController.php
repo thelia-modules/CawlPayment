@@ -10,17 +10,18 @@ use CawlPayment\Service\SecureConfigService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
-use Thelia\Core\Security\SecurityContext;
 use Thelia\Core\Translation\Translator;
 use Thelia\Tools\URL;
 
 /**
  * Admin controller for CAWL Payment configuration
  */
-class ConfigurationController
+class ConfigurationController extends BaseAdminController
 {
     /**
      * Clé de session pour le token CSRF (doit correspondre à AdminHook)
@@ -28,38 +29,23 @@ class ConfigurationController
     private const CSRF_TOKEN_KEY = 'cawlpayment_csrf_token';
 
     public function __construct(
-        private readonly SecurityContext $securityContext,
-        private readonly SecureConfigService $secureConfigService
+        private readonly SecureConfigService $secureConfigService,
+        private readonly CawlApiService $apiService
     ) {
-    }
-
-    /**
-     * Check if user has admin access to this module
-     */
-    private function checkAdminAccess(string $access = AccessManager::UPDATE): bool
-    {
-        if (!$this->securityContext->hasAdminUser()) {
-            return false;
-        }
-
-        return $this->securityContext->isGranted(
-            ['ADMIN'],
-            [AdminResources::MODULE],
-            ['CawlPayment'],
-            [$access]
-        );
     }
 
     /**
      * Save configuration
      */
     #[Route(path: '/admin/cawlpayment/configure', name: 'cawlpayment.admin.configure', methods: ['POST'])]
-    public function saveAction(Request $request): RedirectResponse
+    public function saveAction(Request $request): Response
     {
-        if (!$this->checkAdminAccess(AccessManager::UPDATE)) {
-            return new RedirectResponse(
-                URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', ['error' => 'Access denied'])
-            );
+        if (null !== $response = $this->checkAuth(
+            AdminResources::MODULE,
+            ['CawlPayment'],
+            AccessManager::UPDATE
+        )) {
+            return $response;
         }
 
         // Get form data directly from request
@@ -121,8 +107,21 @@ class ConfigurationController
                 $this->secureConfigService->setConfigValue('webhook_secret_prod', $formData['webhook_secret_prod']);
             }
 
-            // Save environment
-            CawlPayment::setConfigValue('environment', $formData['environment'] ?? CawlPayment::ENV_TEST);
+            // Save environment (strict validation: only 'test' or 'production' allowed)
+            $environment = $formData['environment'] ?? CawlPayment::ENV_TEST;
+            $allowedEnvironments = [CawlPayment::ENV_TEST, CawlPayment::ENV_PRODUCTION];
+            if (!in_array($environment, $allowedEnvironments, true)) {
+                return new RedirectResponse(
+                    URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', [
+                        'error' => Translator::getInstance()->trans(
+                            'Invalid environment value. Allowed values: test, production.',
+                            [],
+                            CawlPayment::DOMAIN_NAME
+                        )
+                    ])
+                );
+            }
+            CawlPayment::setConfigValue('environment', $environment);
 
             // Save enabled methods
             $enabledMethods = $formData['enabled_methods'] ?? '';
@@ -157,12 +156,16 @@ class ConfigurationController
     #[Route(path: '/admin/module/CawlPayment/payment-products', name: 'cawlpayment.admin.payment_products', methods: ['GET'])]
     public function paymentProductsAction(Request $request): JsonResponse
     {
-        if (!$this->checkAdminAccess(AccessManager::VIEW)) {
+        if (null !== $response = $this->checkAuth(
+            AdminResources::MODULE,
+            ['CawlPayment'],
+            AccessManager::VIEW
+        )) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
         try {
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
 
             // Get parameters from request
             $amount = (int) $request->query->get('amount', 10000); // Default 100 EUR in cents
@@ -186,12 +189,16 @@ class ConfigurationController
     #[Route(path: '/admin/module/CawlPayment/test-connection', name: 'cawlpayment.admin.test_connection', methods: ['POST'])]
     public function testConnectionAction(Request $request): JsonResponse
     {
-        if (!$this->checkAdminAccess(AccessManager::VIEW)) {
+        if (null !== $response = $this->checkAuth(
+            AdminResources::MODULE,
+            ['CawlPayment'],
+            AccessManager::VIEW
+        )) {
             return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
         }
 
         try {
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
             $result = $apiService->testConnection();
 
             return new JsonResponse($result);

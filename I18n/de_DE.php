@@ -263,4 +263,8 @@ return [
     'Access denied' => 'Zugriff verweigert',
     'Not authenticated' => 'Nicht authentifiziert',
     'Paid order status not found' => 'Bezahlter Bestellstatus nicht gefunden',
+
+    // Security messages
+    'Invalid security token. Please try again.' => 'Ungültiges Sicherheitstoken. Bitte versuchen Sie es erneut.',
+    'Invalid environment value. Allowed values: test, production.' => 'Ungültiger Umgebungswert. Erlaubte Werte: test, production.',
 ];

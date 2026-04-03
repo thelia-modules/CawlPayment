@@ -263,4 +263,8 @@ return [
     'Access denied' => 'Acceso denegado',
     'Not authenticated' => 'No autenticado',
     'Paid order status not found' => 'Estado de pedido pagado no encontrado',
+
+    // Security messages
+    'Invalid security token. Please try again.' => 'Token de seguridad no válido. Por favor, inténtelo de nuevo.',
+    'Invalid environment value. Allowed values: test, production.' => 'Valor de entorno no válido. Valores permitidos: test, production.',
 ];

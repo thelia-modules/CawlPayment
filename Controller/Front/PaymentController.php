@@ -26,10 +26,14 @@ use Thelia\Tools\URL;
 class PaymentController extends BaseFrontController
 {
     private EventDispatcherInterface $dispatcher;
+    private CawlApiService $apiService;
 
-    public function __construct(EventDispatcherInterface $dispatcher)
-    {
+    public function __construct(
+        EventDispatcherInterface $dispatcher,
+        CawlApiService $apiService
+    ) {
         $this->dispatcher = $dispatcher;
+        $this->apiService = $apiService;
     }
     /**
      * Initiate payment process
@@ -65,7 +69,7 @@ class PaymentController extends BaseFrontController
 
         try {
             // Create API service
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
 
             // Build return URLs
             $baseUrl = URL::getInstance()->absoluteUrl('');
@@ -131,7 +135,7 @@ class PaymentController extends BaseFrontController
 
         try {
             // Get payment status from CAWL
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
 
             // Find hosted checkout ID from transaction
             $transaction = CawlTransactionQuery::create()
@@ -272,7 +276,7 @@ class PaymentController extends BaseFrontController
         }
 
         try {
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
 
             $status = $apiService->getHostedCheckoutStatus($hostedCheckoutId);
 

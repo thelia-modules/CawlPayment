@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace CawlPayment\Hook;
 
-use CawlPayment\CawlPayment;
 use CawlPayment\Service\CawlApiService;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
@@ -18,6 +17,12 @@ use Thelia\Model\ModuleQuery;
  */
 class FrontHook extends BaseHook
 {
+    private CawlApiService $apiService;
+
+    public function __construct(CawlApiService $apiService)
+    {
+        $this->apiService = $apiService;
+    }
 
     /**
      * Display payment method options in the checkout
@@ -39,8 +44,7 @@ class FrontHook extends BaseHook
         }
 
         // Get enabled payment methods
-        $module = new CawlPayment();
-        $enabledMethods = $module->getEnabledPaymentMethods();
+        $enabledMethods = $this->apiService->getEnabledPaymentMethods();
 
         if (empty($enabledMethods)) {
             return;
@@ -61,8 +65,7 @@ class FrontHook extends BaseHook
     private function enrichWithApiLogos(array $enabledMethods): array
     {
         try {
-            $apiService = new CawlApiService();
-            $result = $apiService->getPaymentProductsCached();
+            $result = $this->apiService->getPaymentProductsCached();
 
             if (!$result['success'] || empty($result['products'])) {
                 // Return methods without logos

@@ -263,4 +263,8 @@ return [
     'Access denied' => 'Access denied',
     'Not authenticated' => 'Not authenticated',
     'Paid order status not found' => 'Paid order status not found',
+
+    // Security messages
+    'Invalid security token. Please try again.' => 'Invalid security token. Please try again.',
+    'Invalid environment value. Allowed values: test, production.' => 'Invalid environment value. Allowed values: test, production.',
 ];

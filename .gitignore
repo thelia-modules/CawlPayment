@@ -11,3 +11,6 @@ vendor/
 # PHPUnit
 .phpunit.cache/
 phpunit.xml
+
+# Playwright MCP
+.playwright-mcp/

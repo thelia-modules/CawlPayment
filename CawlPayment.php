@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CawlPayment;
 
+use CawlPayment\Hook\FrontHook;
 use CawlPayment\Service\CawlApiService;
 use CawlPayment\Service\CredentialsEncryptionService;
 use CawlPayment\Service\CsrfTokenService;
@@ -100,6 +101,7 @@ class CawlPayment extends AbstractPaymentModule
                 __DIR__.'/Hook/*',
                 __DIR__.'/Loop/*',
                 __DIR__.'/Form/*',
+                __DIR__.'/vendor/*',
             ])
             ->autowire(true)
             ->autoconfigure(true);
@@ -116,6 +118,16 @@ class CawlPayment extends AbstractPaymentModule
         $servicesConfigurator->set(CsrfTokenService::class)
             ->autowire(true)
             ->public();
+
+        // CawlApiService doit être public pour être accessible depuis le module (AbstractPaymentModule::pay())
+        $servicesConfigurator->set(CawlApiService::class)
+            ->autowire(true)
+            ->public();
+
+        // FrontHook nécessite l'injection de CawlApiService via le constructeur
+        $servicesConfigurator->set('cawlpayment.hook.front', FrontHook::class)
+            ->autowire(true)
+            ->public();
     }
 
     /**
@@ -125,7 +137,8 @@ class CawlPayment extends AbstractPaymentModule
     public function pay(Order $order): ?Response
     {
         try {
-            $apiService = new CawlApiService();
+            /** @var CawlApiService $apiService */
+            $apiService = $this->getContainer()->get(CawlApiService::class);
 
             // Build return URL - success callback
             $baseUrl = \Thelia\Model\ConfigQuery::read('url_site', '');

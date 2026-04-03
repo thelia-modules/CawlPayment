@@ -266,4 +266,5 @@ return [
 
     // Security messages
     'Invalid security token. Please try again.' => 'Jeton de sécurité invalide. Veuillez réessayer.',
+    'Invalid environment value. Allowed values: test, production.' => 'Valeur d\'environnement invalide. Valeurs autorisées : test, production.',
 ];

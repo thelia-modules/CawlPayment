@@ -19,7 +19,8 @@ use Thelia\Core\Security\SecurityContext;
 class TestController
 {
     public function __construct(
-        private readonly SecurityContext $securityContext
+        private readonly SecurityContext $securityContext,
+        private readonly CawlApiService $apiService
     ) {
     }
 
@@ -51,7 +52,7 @@ class TestController
         }
 
         try {
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
             $result = $apiService->testConnection();
 
             return new JsonResponse($result);
@@ -74,7 +75,7 @@ class TestController
         }
 
         try {
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
             $config = $apiService->getConfigurationSummary();
 
             return new JsonResponse([
@@ -104,7 +105,7 @@ class TestController
             $currency = $request->query->get('currency', 'EUR');
             $country = $request->query->get('country', 'FR');
 
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
             $result = $apiService->getPaymentProducts($amount, $currency, $country);
 
             return new JsonResponse($result);
@@ -130,7 +131,7 @@ class TestController
             $amount = (int) $request->query->get('amount', 1000);
             $currency = $request->query->get('currency', 'EUR');
 
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
             $result = $apiService->createTestHostedCheckout($amount, $currency);
 
             return new JsonResponse($result);
@@ -153,7 +154,7 @@ class TestController
         }
 
         try {
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
             $result = $apiService->getHostedCheckoutStatus($hostedCheckoutId);
 
             return new JsonResponse($result);
@@ -176,7 +177,7 @@ class TestController
         }
 
         try {
-            $apiService = new CawlApiService();
+            $apiService = $this->apiService;
             $result = $apiService->getPaymentStatus($paymentId);
 
             return new JsonResponse($result);
@@ -202,7 +203,7 @@ class TestController
 
         if ($hostedCheckoutId) {
             try {
-                $apiService = new CawlApiService();
+                $apiService = $this->apiService;
                 $status = $apiService->getHostedCheckoutStatus($hostedCheckoutId);
             } catch (\Exception $e) {
                 $error = $e->getMessage();
@@ -261,7 +262,7 @@ class TestController
             return new Response('Access denied', 403);
         }
 
-        $apiService = new CawlApiService();
+        $apiService = $this->apiService;
         $config = $apiService->getConfigurationSummary();
 
         $html = '<!DOCTYPE html>

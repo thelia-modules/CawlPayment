@@ -7,6 +7,7 @@ namespace CawlPayment\EventListeners;
 use CawlPayment\CawlPayment;
 use CawlPayment\Service\CawlApiService;
 use OpenApi\Events\OpenApiEvents;
+
 use OpenApi\Events\PaymentModuleOptionEvent;
 use OpenApi\Model\Api\ModelFactory;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -18,10 +19,14 @@ use Thelia\Core\Translation\Translator;
 class PaymentOptionsListener implements EventSubscriberInterface
 {
     private ModelFactory $modelFactory;
+    private CawlApiService $apiService;
 
-    public function __construct(ModelFactory $modelFactory)
-    {
+    public function __construct(
+        ModelFactory $modelFactory,
+        CawlApiService $apiService
+    ) {
         $this->modelFactory = $modelFactory;
+        $this->apiService = $apiService;
     }
 
     /**
@@ -48,8 +53,7 @@ class PaymentOptionsListener implements EventSubscriberInterface
             return;
         }
 
-        $cawlModule = new CawlPayment();
-        $enabledMethods = $cawlModule->getEnabledPaymentMethods();
+        $enabledMethods = $this->apiService->getEnabledPaymentMethods();
 
         if (empty($enabledMethods)) {
             return;
@@ -93,8 +97,7 @@ class PaymentOptionsListener implements EventSubscriberInterface
         $logoMap = [];
 
         try {
-            $apiService = new CawlApiService();
-            $result = $apiService->getPaymentProductsCached();
+            $result = $this->apiService->getPaymentProductsCached();
 
             if ($result['success'] && !empty($result['products'])) {
                 foreach ($result['products'] as $product) {

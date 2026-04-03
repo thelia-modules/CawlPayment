@@ -24,13 +24,16 @@ class WebhookController extends BaseFrontController
 {
     private EventDispatcherInterface $dispatcher;
     private IpWhitelistService $ipWhitelistService;
+    private CawlApiService $apiService;
 
     public function __construct(
         EventDispatcherInterface $dispatcher,
-        IpWhitelistService $ipWhitelistService
+        IpWhitelistService $ipWhitelistService,
+        CawlApiService $apiService
     ) {
         $this->dispatcher = $dispatcher;
         $this->ipWhitelistService = $ipWhitelistService;
+        $this->apiService = $apiService;
     }
     /**
      * Handle CAWL webhook notifications
@@ -74,9 +77,7 @@ class WebhookController extends BaseFrontController
             $signature = $request->headers->get('X-GCS-Signature', '');
 
             // Process webhook
-            $apiService = new CawlApiService();
-
-            $result = $apiService->processWebhook($payload, $signature, $rawBody);
+            $result = $this->apiService->processWebhook($payload, $signature, $rawBody);
 
             if (!$result['success']) {
                 $logger->addError('[CawlPayment Webhook] Processing failed: ' . ($result['error'] ?? 'Unknown'));
