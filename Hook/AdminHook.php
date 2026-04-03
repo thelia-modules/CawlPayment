@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace CawlPayment\Hook;
 
 use CawlPayment\CawlPayment;
-use CawlPayment\Service\CsrfTokenService;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Thelia\Core\Event\Hook\HookRenderEvent;
 use Thelia\Core\Hook\BaseHook;
@@ -22,6 +21,11 @@ use Thelia\Core\Translation\Translator;
  */
 class AdminHook extends BaseHook
 {
+    /**
+     * Clé de session pour le token CSRF
+     */
+    private const CSRF_TOKEN_KEY = 'cawlpayment_csrf_token';
+
     /**
      * Override constructor to skip problematic module instantiation in BaseHook.
      *
@@ -98,20 +102,9 @@ class AdminHook extends BaseHook
         $hasTestCredentials = !empty($config['api_key_test']) && !empty($config['api_secret_test']);
         $hasProdCredentials = !empty($config['api_key_prod']) && !empty($config['api_secret_prod']);
 
-        // Generate CSRF token using the container to get the service
-        $formToken = '';
-        try {
-            if ($this->container->has(CsrfTokenService::class)) {
-                $csrfTokenService = $this->container->get(CsrfTokenService::class);
-                $formToken = $csrfTokenService->generateToken();
-            } else {
-                // Fallback: generate a random token
-                $formToken = bin2hex(random_bytes(32));
-            }
-        } catch (\Throwable $e) {
-            // Fallback: generate a random token if service fails
-            $formToken = bin2hex(random_bytes(32));
-        }
+        // Generate CSRF token and store directly in session
+        $formToken = bin2hex(random_bytes(32));
+        $this->getSession()->set(self::CSRF_TOKEN_KEY, $formToken);
 
         $event->add($this->render('module-configuration.html', [
             'config' => $config,

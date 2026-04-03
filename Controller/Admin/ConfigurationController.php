@@ -6,7 +6,6 @@ namespace CawlPayment\Controller\Admin;
 
 use CawlPayment\CawlPayment;
 use CawlPayment\Service\CawlApiService;
-use CawlPayment\Service\CsrfTokenService;
 use CawlPayment\Service\SecureConfigService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -15,6 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
 use Thelia\Core\Security\SecurityContext;
+use Thelia\Core\Translation\Translator;
 use Thelia\Tools\URL;
 
 /**
@@ -22,9 +22,13 @@ use Thelia\Tools\URL;
  */
 class ConfigurationController
 {
+    /**
+     * Clé de session pour le token CSRF (doit correspondre à AdminHook)
+     */
+    private const CSRF_TOKEN_KEY = 'cawlpayment_csrf_token';
+
     public function __construct(
         private readonly SecurityContext $securityContext,
-        private readonly CsrfTokenService $csrfTokenService,
         private readonly SecureConfigService $secureConfigService
     ) {
     }
@@ -61,12 +65,23 @@ class ConfigurationController
         // Get form data directly from request
         $formData = $request->request->all('cawlpayment_configuration');
 
-        // CSRF Token Validation
+        // CSRF Token Validation via session
         $submittedToken = $formData['_token'] ?? null;
+        $session = $request->getSession();
+        $storedToken = $session->get(self::CSRF_TOKEN_KEY);
 
-        if (!$this->csrfTokenService->validateToken($submittedToken)) {
+        // Supprimer le token après utilisation (one-time use)
+        $session->remove(self::CSRF_TOKEN_KEY);
+
+        if (empty($submittedToken) || empty($storedToken) || !hash_equals($storedToken, $submittedToken)) {
             return new RedirectResponse(
-                URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', ['error' => 'Invalid security token. Please try again.'])
+                URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', [
+                    'error' => Translator::getInstance()->trans(
+                        'Invalid security token. Please try again.',
+                        [],
+                        CawlPayment::DOMAIN_NAME
+                    )
+                ])
             );
         }
 

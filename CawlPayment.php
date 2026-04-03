@@ -6,6 +6,7 @@ namespace CawlPayment;
 
 use CawlPayment\Service\CawlApiService;
 use CawlPayment\Service\CredentialsEncryptionService;
+use CawlPayment\Service\CsrfTokenService;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -106,6 +107,12 @@ class CawlPayment extends AbstractPaymentModule
             ->autoconfigure(true)
             ->public()
             ->tag('controller.service_arguments');
+
+        // CsrfTokenService doit être public pour être accessible depuis les hooks Thelia
+        // (les hooks ne sont pas instanciés par Symfony DI, ils utilisent $this->container->get())
+        $servicesConfigurator->set(CsrfTokenService::class)
+            ->autowire(true)
+            ->public();
     }
 
     /**
