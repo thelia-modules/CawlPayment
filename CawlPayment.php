@@ -55,7 +55,7 @@ class CawlPayment extends AbstractPaymentModule
         'ideal' => ['id' => 809, 'name' => 'iDEAL', 'category' => 'banktransfer', 'icon' => 'ideal.svg'],
         'bancontact' => ['id' => 3012, 'name' => 'Bancontact', 'category' => 'banktransfer', 'icon' => 'bancontact.svg'],
         'przelewy24' => ['id' => 3124, 'name' => 'Przelewy24', 'category' => 'banktransfer', 'icon' => 'przelewy24.svg'],
-        'eps' => ['id' => 5765, 'name' => 'EPS', 'category' => 'banktransfer', 'icon' => 'eps.svg'],
+        'eps' => ['id' => 5406, 'name' => 'EPS', 'category' => 'banktransfer', 'icon' => 'eps.svg'],
         'giropay' => ['id' => 5408, 'name' => 'Giropay', 'category' => 'banktransfer', 'icon' => 'giropay.svg'],
 
         // Buy now pay later
