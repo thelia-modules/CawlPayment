@@ -639,7 +639,7 @@ class CawlApiService
      */
     public function isSuccessStatus(string $status): bool
     {
-        return in_array($status, ['CAPTURED', 'PAID', 'PENDING_CAPTURE', 'PAYMENT_CREATED']);
+        return in_array($status, ['CAPTURED', 'PAID', 'PENDING_CAPTURE']);
     }
 
     /**
