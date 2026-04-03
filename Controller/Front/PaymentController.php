@@ -247,6 +247,30 @@ class PaymentController extends BaseFrontController
     #[Route(path: '/cawlpayment/status/{hostedCheckoutId}', name: 'cawlpayment.front.status', requirements: ['hostedCheckoutId' => '[a-zA-Z0-9_-]+'], methods: ['GET'])]
     public function statusAction(Request $request, string $hostedCheckoutId): JsonResponse
     {
+        // Verify customer is authenticated
+        $customer = $this->getSecurityContext()->getCustomerUser();
+        if (!$customer) {
+            return new JsonResponse(['success' => false, 'error' => 'Unauthorized'], 401);
+        }
+
+        // Verify the hosted checkout belongs to the current customer
+        $transaction = CawlTransactionQuery::create()
+            ->filterByHostedCheckoutId($hostedCheckoutId)
+            ->findOne();
+
+        if (!$transaction) {
+            return new JsonResponse(['success' => false, 'error' => 'Not found'], 404);
+        }
+
+        $order = OrderQuery::create()->findPk($transaction->getOrderId());
+        if (!$order || $order->getCustomerId() !== $customer->getId()) {
+            \Thelia\Log\Tlog::getInstance()->warning(
+                '[CawlPayment] Unauthorized status check for checkout ' . $hostedCheckoutId .
+                ' by customer ' . $customer->getId()
+            );
+            return new JsonResponse(['success' => false, 'error' => 'Not found'], 404);
+        }
+
         try {
             $apiService = new CawlApiService();
 
@@ -261,7 +285,7 @@ class PaymentController extends BaseFrontController
         } catch (\Exception $e) {
             return new JsonResponse([
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => 'Payment status check failed',
             ], 500);
         }
     }
