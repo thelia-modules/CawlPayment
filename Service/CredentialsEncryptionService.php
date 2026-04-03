@@ -208,15 +208,17 @@ class CredentialsEncryptionService
             }
         }
 
-        // Si c'est une chaine alphanumerique simple avec tirets/underscores
-        // et que la longueur decodee base64 serait trop courte pour etre chiffree
+        // Si c'est une chaine alphanumerique simple avec tirets/underscores,
+        // c'est une API key en clair (pas du base64 chiffre).
+        // Les valeurs chiffrees par notre service contiennent des caracteres
+        // base64 non-hex (+, /, =) car elles encodent des donnees binaires aleatoires.
         if (preg_match('/^[a-zA-Z0-9_\-]+$/', $value)) {
-            $decoded = base64_decode($value, true);
-            $ivLength = openssl_cipher_iv_length(self::CIPHER) ?: 12;
+            return true;
+        }
 
-            if ($decoded === false || strlen($decoded) < $ivLength + self::TAG_LENGTH + 1) {
-                return true;
-            }
+        // Les chaines purement hexadecimales sont des API keys, pas du chiffre
+        if (preg_match('/^[0-9A-Fa-f]+$/', $value)) {
+            return true;
         }
 
         return false;

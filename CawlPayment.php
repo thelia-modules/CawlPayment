@@ -425,10 +425,12 @@ class CawlPayment extends AbstractPaymentModule
             try {
                 $value = $encryptionService->decrypt($value);
             } catch (\Exception $e) {
-                Tlog::getInstance()->error(
-                    '[CawlPayment] Failed to decrypt config value for key "' . $key . '": ' . $e->getMessage()
+                // Decryption failed — likely a legacy plaintext value that
+                // isEncrypted() misidentified. Return the original value as-is
+                // rather than losing it by returning the empty default.
+                Tlog::getInstance()->warning(
+                    '[CawlPayment] Could not decrypt config "' . $key . '", treating as plaintext: ' . $e->getMessage()
                 );
-                return $default;
             }
         }
 

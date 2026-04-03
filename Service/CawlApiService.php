@@ -7,10 +7,10 @@ namespace CawlPayment\Service;
 use CawlPayment\CawlPayment;
 use CawlPayment\Model\CawlTransaction;
 use CawlPayment\Model\CawlTransactionQuery;
+use OnlinePayments\Sdk\Authentication\V1HmacAuthenticator;
 use OnlinePayments\Sdk\Client;
 use OnlinePayments\Sdk\Communicator;
 use OnlinePayments\Sdk\CommunicatorConfiguration;
-use OnlinePayments\Sdk\DefaultConnection;
 use OnlinePayments\Sdk\Domain\AmountOfMoney;
 use OnlinePayments\Sdk\Domain\ContactDetails;
 use OnlinePayments\Sdk\Domain\CreateHostedCheckoutRequest;
@@ -82,8 +82,8 @@ class CawlApiService
                 'CawlPayment/1.0.0'
             );
 
-            $connection = new DefaultConnection();
-            $communicator = new Communicator($connection, $communicatorConfig);
+            $authenticator = new V1HmacAuthenticator($communicatorConfig);
+            $communicator = new Communicator($communicatorConfig, $authenticator);
             $this->client = new Client($communicator);
         }
 
