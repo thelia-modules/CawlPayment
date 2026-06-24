@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace CawlPayment\Controller\Front;
 
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Front\BaseFrontController;
 
 /**
@@ -13,10 +12,6 @@ use Thelia\Controller\Front\BaseFrontController;
  */
 class AssetController extends BaseFrontController
 {
-    /**
-     * Serve payment method icon
-     */
-    #[Route(path: '/cawlpayment/icon/{filename}', name: 'cawlpayment.front.icon', requirements: ['filename' => '[a-zA-Z0-9_.-]+'], methods: ['GET'])]
     public function iconAction(string $filename): Response
     {
         // Sanitize filename to prevent directory traversal

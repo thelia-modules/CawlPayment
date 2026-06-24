@@ -65,9 +65,8 @@ class AdminHook extends BaseHook
         // Get all payment methods by category
         $methodsByCategory = CawlPayment::getPaymentMethodsByCategory();
 
-        // Get webhook URL
-        $module = new CawlPayment();
-        $webhookUrl = $module->getWebhookUrl();
+        $baseUrl = \Thelia\Model\ConfigQuery::read('url_site', '');
+        $webhookUrl = rtrim($baseUrl, '/') . '/cawlpayment/webhook';
 
         // Check if credentials are configured
         $hasTestCredentials = !empty($config['api_key_test']) && !empty($config['api_secret_test']);

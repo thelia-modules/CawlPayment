@@ -12,7 +12,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
@@ -35,10 +34,6 @@ class PaymentController extends BaseFrontController
         $this->dispatcher = $dispatcher;
         $this->apiService = $apiService;
     }
-    /**
-     * Initiate payment process
-     */
-    #[Route(path: '/cawlpayment/pay/{orderId}/{methodCode}', name: 'cawlpayment.front.pay', requirements: ['orderId' => '\d+', 'methodCode' => '[a-z0-9_]+'], methods: ['GET', 'POST'])]
     public function payAction(Request $request, int $orderId, string $methodCode): Response
     {
         // Get order
@@ -99,10 +94,6 @@ class PaymentController extends BaseFrontController
         }
     }
 
-    /**
-     * Handle success return from CAWL
-     */
-    #[Route(path: '/cawlpayment/success', name: 'cawlpayment.front.success', methods: ['GET'])]
     public function successAction(Request $request): Response
     {
         $orderId = $request->query->get('order_id');
@@ -168,10 +159,6 @@ class PaymentController extends BaseFrontController
         }
     }
 
-    /**
-     * Handle failure return from CAWL
-     */
-    #[Route(path: '/cawlpayment/failure', name: 'cawlpayment.front.failure', methods: ['GET'])]
     public function failureAction(Request $request): Response
     {
         $orderId = $request->query->get('order_id');
@@ -207,10 +194,6 @@ class PaymentController extends BaseFrontController
         );
     }
 
-    /**
-     * Handle cancel return from CAWL
-     */
-    #[Route(path: '/cawlpayment/cancel', name: 'cawlpayment.front.cancel', methods: ['GET'])]
     public function cancelAction(Request $request): Response
     {
         $orderId = $request->query->get('order_id');
@@ -245,10 +228,6 @@ class PaymentController extends BaseFrontController
         );
     }
 
-    /**
-     * Get payment status (AJAX)
-     */
-    #[Route(path: '/cawlpayment/status/{hostedCheckoutId}', name: 'cawlpayment.front.status', requirements: ['hostedCheckoutId' => '[a-zA-Z0-9_-]+'], methods: ['GET'])]
     public function statusAction(Request $request, string $hostedCheckoutId): JsonResponse
     {
         // Verify customer is authenticated

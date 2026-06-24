@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
@@ -34,10 +33,6 @@ class ConfigurationController extends BaseAdminController
     ) {
     }
 
-    /**
-     * Save configuration
-     */
-    #[Route(path: '/admin/cawlpayment/configure', name: 'cawlpayment.admin.configure', methods: ['POST'])]
     public function saveAction(Request $request): Response
     {
         if (null !== $response = $this->checkAuth(
@@ -150,10 +145,6 @@ class ConfigurationController extends BaseAdminController
         }
     }
 
-    /**
-     * Get available payment products from API (with caching)
-     */
-    #[Route(path: '/admin/module/CawlPayment/payment-products', name: 'cawlpayment.admin.payment_products', methods: ['GET'])]
     public function paymentProductsAction(Request $request): JsonResponse
     {
         if (null !== $response = $this->checkAuth(
@@ -183,10 +174,6 @@ class ConfigurationController extends BaseAdminController
         }
     }
 
-    /**
-     * Test API connection
-     */
-    #[Route(path: '/admin/module/CawlPayment/test-connection', name: 'cawlpayment.admin.test_connection', methods: ['POST'])]
     public function testConnectionAction(Request $request): JsonResponse
     {
         if (null !== $response = $this->checkAuth(
