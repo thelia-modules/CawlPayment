@@ -210,6 +210,34 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="panel panel-default" style="margin-top:16px">
+                                    <div class="panel-heading" style="cursor:pointer" data-toggle="collapse" data-target="#ngrok-help">
+                                        <strong><i class="glyphicon glyphicon-wrench"></i> {intl d='cawlpayment' l='Local testing with ngrok'}</strong>
+                                        <span class="pull-right text-muted" style="font-size:12px">{intl d='cawlpayment' l='click to expand'}</span>
+                                    </div>
+                                    <div id="ngrok-help" class="panel-collapse collapse">
+                                        <div class="panel-body" style="font-size:13px">
+                                            <p>{intl d='cawlpayment' l='In local development (DDEV), Worldline cannot reach'} <code>*.ddev.site</code> {intl d='cawlpayment' l='because it resolves to'} <code>127.0.0.1</code> {intl d='cawlpayment' l='on their servers. The return URL callback will never be called, which means the payment status will not be logged.'}</p>
+                                            <p><strong>{intl d='cawlpayment' l='Solution: expose DDEV via ngrok'}</strong></p>
+                                            <ol>
+                                                <li>{intl d='cawlpayment' l='Install ngrok:'} <code>sudo snap install ngrok</code></li>
+                                                <li>{intl d='cawlpayment' l='Create a free account on'} <a href="https://ngrok.com" target="_blank">ngrok.com</a> {intl d='cawlpayment' l='and add your authtoken to'} <code>.ddev/config.yaml</code> : <code>ngrok_args: --authtoken=&lt;token&gt;</code></li>
+                                                <li>{intl d='cawlpayment' l='Start the tunnel in a dedicated terminal (keep it running):'} <code>ddev share</code></li>
+                                                <li>{intl d='cawlpayment' l='Copy the public URL (e.g.'} <code>https://xxxx.ngrok-free.app</code>{intl d='cawlpayment' l=') and paste it in the field below.'}</li>
+                                                <li>{intl d='cawlpayment' l='Run'} <code>ddev exec php Thelia cawlpayment:test-transaction</code></li>
+                                            </ol>
+                                            <p class="text-muted">{intl d='cawlpayment' l='After payment, Worldline will redirect to the ngrok URL. The result (status, paymentId, isPaid) will appear in'} <code>var/log/log-thelia.txt</code> {intl d='cawlpayment' l='with the prefix'} <code>[CawlPayment][test-return]</code>.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="test_base_url">{intl d='cawlpayment' l='Test return URL base (ngrok / tunnel)'}</label>
+                                    <input type="text" class="form-control" id="test_base_url"
+                                           name="cawlpayment_configuration[test_base_url]"
+                                           value="{$config.test_base_url|default:''|escape:'html'}"
+                                           placeholder="https://xxxx.ngrok-free.app">
+                                    <p class="help-block">{intl d='cawlpayment' l='Leave empty to use the site URL. Set to an ngrok/tunnel URL for local testing so Worldline can reach the return URL.'}</p>
+                                </div>
                             </div>
 
                             {* Production credentials *}

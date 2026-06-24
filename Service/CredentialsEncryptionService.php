@@ -29,8 +29,6 @@ class CredentialsEncryptionService
         'api_key_prod',
         'api_secret_test',
         'api_secret_prod',
-        'webhook_key_test',
-        'webhook_key_prod',
         'webhook_secret_test',
         'webhook_secret_prod',
     ];

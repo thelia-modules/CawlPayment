@@ -57,6 +57,7 @@ class AdminHook extends BaseHook
             'max_amount' => CawlPayment::getConfigValue('max_amount', '0'),
             'webhook_ip_whitelist' => CawlPayment::getConfigValue('webhook_ip_whitelist', ''),
             'webhook_whitelist_enabled' => CawlPayment::getConfigValue('webhook_whitelist_enabled', '1'),
+            'test_base_url' => CawlPayment::getConfigValue('test_base_url', ''),
         ];
 
         // Parse enabled methods into array

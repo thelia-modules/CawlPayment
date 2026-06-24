@@ -134,6 +134,9 @@ class ConfigurationController extends BaseAdminController
             $webhookWhitelistEnabled = isset($formData['webhook_whitelist_enabled']) ? '1' : '0';
             CawlPayment::setConfigValue('webhook_whitelist_enabled', $webhookWhitelistEnabled);
 
+            // Save test base URL (ngrok or other tunnel for local dev)
+            CawlPayment::setConfigValue('test_base_url', rtrim($formData['test_base_url'] ?? '', '/'));
+
             return new RedirectResponse(
                 URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', ['success' => '1'])
             );

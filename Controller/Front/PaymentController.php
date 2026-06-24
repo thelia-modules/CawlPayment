@@ -308,11 +308,27 @@ class PaymentController extends BaseFrontController
         $hostedCheckoutId = $request->query->get('hostedCheckoutId', '');
 
         if (empty($hostedCheckoutId)) {
+            \Thelia\Log\Tlog::getInstance()->warning('[CawlPayment][test-return] Callback reçu sans hostedCheckoutId');
+
             return new JsonResponse(['success' => false, 'error' => 'Missing hostedCheckoutId'], 400);
         }
 
         try {
             $status = $this->apiService->getHostedCheckoutStatus($hostedCheckoutId);
+
+            $isPaid = $status['isPaid'] ?? false;
+            $logLine = sprintf(
+                '[CawlPayment][test-return] hostedCheckoutId=%s | status=%s | paymentStatus=%s | statusCode=%s | isPaid=%s | paymentId=%s',
+                $hostedCheckoutId,
+                $status['status'] ?? 'n/a',
+                $status['paymentStatus'] ?? 'n/a',
+                $status['statusCode'] ?? 'n/a',
+                $isPaid ? 'oui' : 'non',
+                $status['paymentId'] ?? 'n/a'
+            );
+
+            // error() used intentionally: Tlog default level is ERROR, info/warning are silently dropped.
+            \Thelia\Log\Tlog::getInstance()->error($logLine);
 
             return new JsonResponse([
                 'success' => true,
@@ -320,6 +336,10 @@ class PaymentController extends BaseFrontController
                 'status' => $status,
             ]);
         } catch (\Throwable $e) {
+            \Thelia\Log\Tlog::getInstance()->error(
+                sprintf('[CawlPayment][test-return] Erreur pour hostedCheckoutId=%s : %s', $hostedCheckoutId, $e->getMessage())
+            );
+
             return new JsonResponse([
                 'success' => false,
                 'hostedCheckoutId' => $hostedCheckoutId,

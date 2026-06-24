@@ -60,16 +60,19 @@ composer require online-payments/sdk-php:^5.0
 1. **Télécharger** le module et le placer dans `local/modules/CawlPayment/`
 
 2. **Installer le SDK Worldline** :
+
 ```bash
 composer require online-payments/sdk-php:^5.0
 ```
 
 3. **Activer le module** via la CLI Thelia :
+
 ```bash
 php Thelia module:activate CawlPayment
 ```
 
 4. **Vider le cache** :
+
 ```bash
 rm -rf var/cache/*
 ```
@@ -108,6 +111,7 @@ Accédez à la configuration via : **Administration > Modules > CawlPayment > Co
 #### Environnement
 
 Sélectionnez l'environnement actif :
+
 - **Test** : Pour les développements et tests (sandbox Worldline)
 - **Production** : Pour les transactions réelles
 
@@ -117,21 +121,21 @@ Votre identifiant marchand CAWL Solutions. Cet identifiant est fourni lors de la
 
 #### Identifiants de Test
 
-| Champ | Description |
-|-------|-------------|
-| Test API Key | Clé API pour l'environnement de test |
-| Test API Secret | Secret API pour l'environnement de test |
-| Test Webhook Key | Clé webhook pour l'environnement de test |
+| Champ               | Description                                   |
+| ------------------- | --------------------------------------------- |
+| Test API Key        | Clé API pour l'environnement de test          |
+| Test API Secret     | Secret API pour l'environnement de test       |
+| Test Webhook Key    | Clé webhook pour l'environnement de test      |
 | Test Webhook Secret | Secret webhook pour valider les notifications |
 
 #### Identifiants de Production
 
-| Champ | Description |
-|-------|-------------|
-| Production API Key | Clé API pour l'environnement de production |
-| Production API Secret | Secret API pour l'environnement de production |
-| Production Webhook Key | Clé webhook pour l'environnement de production |
-| Production Webhook Secret | Secret webhook pour valider les notifications |
+| Champ                     | Description                                    |
+| ------------------------- | ---------------------------------------------- |
+| Production API Key        | Clé API pour l'environnement de production     |
+| Production API Secret     | Secret API pour l'environnement de production  |
+| Production Webhook Key    | Clé webhook pour l'environnement de production |
+| Production Webhook Secret | Secret webhook pour valider les notifications  |
 
 > **Important** : Ne jamais utiliser les identifiants de test en production et vice-versa.
 
@@ -145,13 +149,13 @@ Sélectionnez les méthodes de paiement à proposer à vos clients. Les méthode
 
 #### Catégories disponibles
 
-| Catégorie | Méthodes |
-|-----------|----------|
-| **Cartes bancaires** | Visa, Mastercard, CB, American Express, Maestro, JCB, Diners Club |
-| **Portefeuilles** | PayPal, Apple Pay, Google Pay, WeChat Pay, Alipay |
-| **Virements bancaires** | iDEAL, Bancontact, Giropay, EPS, Przelewy24, Sofort, SEPA |
-| **Paiement fractionné** | Klarna (Pay Now, Pay Later, Slice It), Oney 3x/4x |
-| **Titres restaurant** | Edenred, Sodexo, Up Déjeuner |
+| Catégorie               | Méthodes                                                          |
+| ----------------------- | ----------------------------------------------------------------- |
+| **Cartes bancaires**    | Visa, Mastercard, CB, American Express, Maestro, JCB, Diners Club |
+| **Portefeuilles**       | PayPal, Apple Pay, Google Pay, WeChat Pay, Alipay                 |
+| **Virements bancaires** | iDEAL, Bancontact, Giropay, EPS, Przelewy24, Sofort, SEPA         |
+| **Paiement fractionné** | Klarna (Pay Now, Pay Later, Slice It), Oney 3x/4x                 |
+| **Titres restaurant**   | Edenred, Sodexo, Up Déjeuner                                      |
 
 ### 3. Options
 
@@ -163,10 +167,10 @@ Sélectionnez les méthodes de paiement à proposer à vos clients. Les méthode
 
 #### Limites de montant
 
-| Option | Description |
-|--------|-------------|
+| Option          | Description                                                            |
+| --------------- | ---------------------------------------------------------------------- |
 | Montant minimum | Montant minimum pour utiliser ce mode de paiement (0 = pas de minimum) |
-| Montant maximum | Montant maximum autorisé (0 = pas de maximum) |
+| Montant maximum | Montant maximum autorisé (0 = pas de maximum)                          |
 
 ### 4. Configuration Webhook
 
@@ -199,9 +203,9 @@ https://votre-site.com/cawlpayment/webhook
 
 Pour renforcer la sécurité des webhooks, vous pouvez activer une whitelist d'adresses IP autorisées. Seules les requêtes provenant des IP listées seront acceptées.
 
-| Option | Description |
-|--------|-------------|
-| **Activer la whitelist** | Active/désactive la vérification des IP sources |
+| Option                      | Description                                     |
+| --------------------------- | ----------------------------------------------- |
+| **Activer la whitelist**    | Active/désactive la vérification des IP sources |
 | **Liste des IP autorisées** | Liste des adresses IP séparées par des virgules |
 
 **IP Worldline à autoriser :**
@@ -224,47 +228,47 @@ Pour renforcer la sécurité des webhooks, vous pouvez activer une whitelist d'a
 
 ### Cartes bancaires
 
-| Code | Nom | ID Produit |
-|------|-----|------------|
-| `visa` | Visa | 1 |
-| `mastercard` | Mastercard | 3 |
-| `cb` | Carte Bancaire | 130 |
-| `amex` | American Express | 2 |
-| `maestro` | Maestro | 117 |
-| `jcb` | JCB | 125 |
-| `diners` | Diners Club | 132 |
+| Code         | Nom              | ID Produit |
+| ------------ | ---------------- | ---------- |
+| `visa`       | Visa             | 1          |
+| `mastercard` | Mastercard       | 3          |
+| `cb`         | Carte Bancaire   | 130        |
+| `amex`       | American Express | 2          |
+| `maestro`    | Maestro          | 117        |
+| `jcb`        | JCB              | 125        |
+| `diners`     | Diners Club      | 132        |
 
 ### Portefeuilles numériques
 
-| Code | Nom | ID Produit |
-|------|-----|------------|
-| `paypal` | PayPal | 840 |
-| `applepay` | Apple Pay | 302 |
-| `googlepay` | Google Pay | 320 |
-| `wechatpay` | WeChat Pay | 863 |
-| `alipay` | Alipay | 861 |
+| Code        | Nom        | ID Produit |
+| ----------- | ---------- | ---------- |
+| `paypal`    | PayPal     | 840        |
+| `applepay`  | Apple Pay  | 302        |
+| `googlepay` | Google Pay | 320        |
+| `wechatpay` | WeChat Pay | 863        |
+| `alipay`    | Alipay     | 861        |
 
 ### Virements bancaires
 
-| Code | Nom | ID Produit | Pays |
-|------|-----|------------|------|
-| `ideal` | iDEAL | 809 | Pays-Bas |
-| `bancontact` | Bancontact | 3012 | Belgique |
-| `giropay` | Giropay | 5408 | Allemagne |
-| `eps` | EPS | 5700 | Autriche |
-| `przelewy24` | Przelewy24 | 3124 | Pologne |
-| `multibanco` | Multibanco | 5500 | Portugal |
-| `twint` | TWINT | 5600 | Suisse |
+| Code         | Nom        | ID Produit | Pays      |
+| ------------ | ---------- | ---------- | --------- |
+| `ideal`      | iDEAL      | 809        | Pays-Bas  |
+| `bancontact` | Bancontact | 3012       | Belgique  |
+| `giropay`    | Giropay    | 5408       | Allemagne |
+| `eps`        | EPS        | 5700       | Autriche  |
+| `przelewy24` | Przelewy24 | 3124       | Pologne   |
+| `multibanco` | Multibanco | 5500       | Portugal  |
+| `twint`      | TWINT      | 5600       | Suisse    |
 
 ### Paiement fractionné (BNPL)
 
-| Code | Nom | ID Produit |
-|------|-----|------------|
-| `klarna_paynow` | Klarna Pay Now | 3301 |
-| `klarna_paylater` | Klarna Pay Later | 3302 |
-| `klarna_sliceit` | Klarna Slice It | 3303 |
-| `oney3x` | Oney 3x | 5110 |
-| `oney4x` | Oney 4x | 5111 |
+| Code              | Nom              | ID Produit |
+| ----------------- | ---------------- | ---------- |
+| `klarna_paynow`   | Klarna Pay Now   | 3301       |
+| `klarna_paylater` | Klarna Pay Later | 3302       |
+| `klarna_sliceit`  | Klarna Slice It  | 3303       |
+| `oney3x`          | Oney 3x          | 5110       |
+| `oney4x`          | Oney 4x          | 5111       |
 
 ---
 
@@ -276,26 +280,83 @@ Utilisez ces numéros de carte dans l'environnement de test :
 
 #### Paiement réussi (Frictionless 3DS)
 
-| Carte | Numéro | Date | CVV |
-|-------|--------|------|-----|
-| Visa | `4012 0000 3333 0026` | Toute date future | 123 |
+| Carte      | Numéro                | Date              | CVV |
+| ---------- | --------------------- | ----------------- | --- |
+| Visa       | `4012 0000 3333 0026` | Toute date future | 123 |
 | Mastercard | `5399 9999 9999 9999` | Toute date future | 123 |
 
 #### Paiement avec Challenge 3DS
 
-| Carte | Numéro | Date | CVV |
-|-------|--------|------|-----|
-| Visa | `4874 9700 0000 0014` | Toute date future | 123 |
+| Carte | Numéro                | Date              | CVV |
+| ----- | --------------------- | ----------------- | --- |
+| Visa  | `4874 9700 0000 0014` | Toute date future | 123 |
 
 #### Paiement refusé
 
-| Carte | Numéro | Date | CVV | Raison |
-|-------|--------|------|-----|--------|
-| Visa | `4000 0200 0000 0000` | Toute date future | 123 | Fonds insuffisants |
+| Carte | Numéro                | Date              | CVV | Raison             |
+| ----- | --------------------- | ----------------- | --- | ------------------ |
+| Visa  | `4000 0200 0000 0000` | Toute date future | 123 | Fonds insuffisants |
 
 ### Test de connexion API
 
 Depuis l'interface de configuration du module (**Administration > Modules > CawlPayment > Configurer**), le bouton **"Test API Connection"** (en haut à droite) permet de vérifier que les identifiants sont corrects et que l'API Worldline est accessible.
+
+### Créer une transaction de test (commande console)
+
+La commande `cawlpayment:test-transaction` permet de créer une transaction sandbox sans passer par le checkout Thelia. Elle vérifie automatiquement la configuration avant de lancer le paiement.
+
+```bash
+# Montant par défaut : 10,00 EUR
+ddev exec php Thelia cawlpayment:test-transaction
+
+# Montant personnalisé (en centimes)
+ddev exec php Thelia cawlpayment:test-transaction --amount=4567 --currency=EUR
+```
+
+La commande effectue 7 vérifications avant de créer le checkout :
+1. Environnement Thelia ≠ production
+2. Module configuré sur "test"
+3. PSPID configuré
+4. `api_key_test` configurée
+5. `api_secret_test` configuré
+6. Au moins une méthode de paiement activée
+7. Connexion API live (appel sandbox)
+
+En cas d'échec, un message indique précisément quelle configuration est manquante.
+
+#### Tester le callback de retour (URL de test)
+
+Après le paiement, Worldline redirige vers l'URL de retour du module. En développement local (DDEV), cette URL n'est pas accessible depuis les serveurs Worldline car `*.ddev.site` résout sur `127.0.0.1`.
+
+**Solution : exposer DDEV via ngrok**
+
+1. Installer ngrok : `sudo snap install ngrok`
+2. Créer un compte gratuit sur [ngrok.com](https://ngrok.com) et récupérer l'authtoken
+3. Configurer DDEV dans `.ddev/config.yaml` :
+
+```yaml
+ngrok_args: --authtoken=<votre-token>
+```
+
+4. Démarrer le tunnel dans un terminal dédié (laisser tourner) :
+
+```bash
+ddev share
+```
+
+5. Copier l'URL publique affichée (ex : `https://xxxx.ngrok-free.app`)
+6. Dans **Admin > CawlPayment > Configuration > Test Credentials**, renseigner cette URL dans le champ **"Test return URL base"**
+7. Relancer `cawlpayment:test-transaction`
+
+Worldline redirigera vers l'URL ngrok après le paiement. Le résultat (statut, paymentId, isPaid) est enregistré dans `var/log/log-thelia.txt` avec le préfixe `[CawlPayment][test-return]`.
+
+> **Note** : le plan gratuit ngrok affiche une page d'avertissement à la première visite — cliquer sur "Visit Site" pour continuer.
+
+### Lancer les tests unitaires
+
+```bash
+ddev exec php vendor/bin/phpunit --configuration local/modules/CawlPayment/phpunit.xml.dist --testsuite "CawlPayment Test Suite"
+```
 
 ---
 
@@ -312,12 +373,12 @@ Depuis l'interface de configuration du module (**Administration > Modules > Cawl
 
 ### URLs de callback
 
-| Route | URL | Description |
-|-------|-----|-------------|
+| Route   | URL                    | Description                  |
+| ------- | ---------------------- | ---------------------------- |
 | Success | `/cawlpayment/success` | Retour après paiement réussi |
-| Failure | `/cawlpayment/failure` | Retour après échec |
-| Cancel | `/cawlpayment/cancel` | Retour après annulation |
-| Webhook | `/cawlpayment/webhook` | Réception des notifications |
+| Failure | `/cawlpayment/failure` | Retour après échec           |
+| Cancel  | `/cawlpayment/cancel`  | Retour après annulation      |
+| Webhook | `/cawlpayment/webhook` | Réception des notifications  |
 
 ---
 
@@ -373,6 +434,7 @@ POST /cawlpayment/pay/{orderId}/{methodCode}
 **Cause** : Aucune méthode de paiement n'est activée ou les identifiants API sont incorrects.
 
 **Solution** :
+
 1. Vérifiez que le PSPID est configuré
 2. Testez la connexion API
 3. Activez au moins une méthode de paiement
@@ -382,6 +444,7 @@ POST /cawlpayment/pay/{orderId}/{methodCode}
 **Cause** : Le secret webhook ne correspond pas ou n'est pas configuré.
 
 **Solution** :
+
 1. Vérifiez que le Webhook Secret est correctement copié depuis le portail CAWL
 2. Assurez-vous d'utiliser le bon secret (test vs production)
 
@@ -390,6 +453,7 @@ POST /cawlpayment/pay/{orderId}/{methodCode}
 **Cause** : Le cache Symfony n'est pas à jour.
 
 **Solution** :
+
 ```bash
 rm -rf var/cache/*
 ```
@@ -399,6 +463,7 @@ rm -rf var/cache/*
 **Cause** : Le webhook n'a pas été reçu ou traité.
 
 **Solution** :
+
 1. Vérifiez l'URL du webhook dans le portail CAWL
 2. Vérifiez les logs dans `var/log/cawlpayment.log`
 3. Assurez-vous que votre serveur accepte les requêtes POST externes
@@ -406,11 +471,13 @@ rm -rf var/cache/*
 ### Logs
 
 Les logs sont enregistrés dans :
+
 ```
 var/log/cawlpayment.log
 ```
 
 Format des logs :
+
 ```
 [2024-01-15 10:30:00] [CawlPayment] Creating hosted checkout for order #123
 [2024-01-15 10:30:01] [CawlPayment] Hosted checkout created: abc123
@@ -476,6 +543,7 @@ Voir [CHANGELOG.md](CHANGELOG.md) pour l'historique complet des versions.
 ### Contact
 
 Pour toute question ou problème :
+
 - **Email** : support@cawl-solutions.com
 - **Documentation Thelia** : https://doc.thelia.net/
 

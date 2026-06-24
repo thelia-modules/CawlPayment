@@ -540,13 +540,14 @@ class CawlApiService
             $sdkOrder->setReferences($references);
 
             // Build hosted checkout specific input
-            $baseUrl = \Thelia\Model\ConfigQuery::read('url_site', '');
+            $testBaseUrl = \CawlPayment\CawlPayment::getConfigValue('test_base_url', '');
+            $baseUrl = !empty($testBaseUrl) ? $testBaseUrl : \Thelia\Model\ConfigQuery::read('url_site', '');
             $returnUrl = rtrim($baseUrl, '/') . '/cawlpayment/test-return';
 
             $hostedCheckoutInput = new HostedCheckoutSpecificInput();
             $hostedCheckoutInput->setReturnUrl($returnUrl);
             $hostedCheckoutInput->setLocale($this->getLocale());
-            $hostedCheckoutInput->setShowResultPage(true);
+            $hostedCheckoutInput->setShowResultPage(false);
 
             // Build request
             $request = new CreateHostedCheckoutRequest();
