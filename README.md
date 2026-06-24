@@ -41,6 +41,7 @@ Module de paiement intégrant la passerelle **CAWL Solutions / Worldline** pour 
 - **Thelia** : Version 2.6.x
 - **PHP** : 8.2 ou supérieur
 - **Extensions PHP** : curl, json, openssl
+- **SDK Worldline** : `online-payments/sdk-php: ^5.0` (installé via Composer)
 - **Compte CAWL Solutions** : Identifiants API (PSPID, API Key, API Secret)
 
 ---
@@ -51,20 +52,26 @@ Module de paiement intégrant la passerelle **CAWL Solutions / Worldline** pour 
 
 ```bash
 composer require cawl/thelia-payment
+composer require online-payments/sdk-php:^5.0
 ```
 
 ### Installation manuelle
 
 1. **Télécharger** le module et le placer dans `local/modules/CawlPayment/`
 
-2. **Activer le module** via la console Thelia :
+2. **Installer le SDK Worldline** :
 ```bash
-php bin/console module:activate CawlPayment
+composer require online-payments/sdk-php:^5.0
 ```
 
-3. **Vider le cache** :
+3. **Activer le module** via la CLI Thelia :
 ```bash
-php bin/console cache:clear
+php Thelia module:activate CawlPayment
+```
+
+4. **Vider le cache** :
+```bash
+rm -rf var/cache/*
 ```
 
 ### Structure du module
@@ -286,18 +293,9 @@ Utilisez ces numéros de carte dans l'environnement de test :
 |-------|--------|------|-----|--------|
 | Visa | `4000 0200 0000 0000` | Toute date future | 123 | Fonds insuffisants |
 
-### Dashboard de test API
+### Test de connexion API
 
-Un dashboard de test est disponible à l'adresse :
-```
-/admin/cawlpayment/test-dashboard
-```
-
-Il permet de :
-- Tester la connexion API
-- Lister les produits de paiement disponibles
-- Créer un checkout de test
-- Vérifier le statut d'un checkout
+Depuis l'interface de configuration du module (**Administration > Modules > CawlPayment > Configurer**), le bouton **"Test API Connection"** (en haut à droite) permet de vérifier que les identifiants sont corrects et que l'API Worldline est accessible.
 
 ---
 
@@ -393,7 +391,7 @@ POST /cawlpayment/pay/{orderId}/{methodCode}
 
 **Solution** :
 ```bash
-php bin/console cache:clear
+rm -rf var/cache/*
 ```
 
 #### Commande payée mais statut "Not paid"
@@ -426,6 +424,7 @@ Format des logs :
 
 ### Bonnes pratiques implémentées
 
+- **Chiffrement AES-256-GCM** des credentials API en base de données (`SecureConfigService`)
 - **Validation HMAC-SHA256** des webhooks
 - **Pas d'exposition des erreurs internes** aux utilisateurs
 - **Journalisation sécurisée** (pas de credentials dans les logs)
@@ -445,7 +444,16 @@ Format des logs :
 
 ## Changelog
 
-### Version 1.0.0 (2024-01)
+Voir [CHANGELOG.md](CHANGELOG.md) pour l'historique complet des versions.
+
+### Version 1.0.1 (2026-06-24)
+
+- Correction compatibilité Thelia 2.6 (services, hooks, routing)
+- Migration SDK `online-payments/sdk-php` v5 (`DefaultConnection`)
+- Réécriture back-office : Bootstrap 3 natif, suppression CSS custom
+- Chiffrement AES-256-GCM des credentials API en base de données
+
+### Version 1.0.0 (2024-12)
 
 - Version initiale
 - Support de 30+ méthodes de paiement
@@ -453,7 +461,6 @@ Format des logs :
 - Support webhooks avec validation signature
 - Multi-langue (FR, EN, ES, IT, DE)
 - Intégration OpenAPI
-- Dashboard de test admin
 
 ---
 
@@ -462,7 +469,7 @@ Format des logs :
 ### Documentation officielle
 
 - [Documentation CAWL Solutions](https://docs.direct.worldline-solutions.com/)
-- [SDK PHP Worldline](https://github.com/Worldline-Global-Collect/connect-sdk-php)
+- [SDK PHP Worldline v5](https://github.com/Online-Payments/sdk-php)
 - [Portail Marchand Test](https://merchant.preprod.direct.worldline-solutions.com)
 - [Portail Marchand Production](https://merchant.direct.worldline-solutions.com)
 
@@ -478,4 +485,4 @@ Pour toute question ou problème :
 
 Ce module est distribué sous licence propriétaire CAWL Solutions.
 
-© 2024 CAWL Solutions - Tous droits réservés.
+© 2026 CAWL Solutions - Tous droits réservés.

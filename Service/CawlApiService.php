@@ -62,7 +62,7 @@ class CawlApiService
 
     private function isLoggingEnabled(): bool
     {
-        return (bool) CawlPayment::getConfigValue('enable_logging', true);
+        return (bool) CawlPayment::getConfigValue('enable_logging', '1');
     }
 
     private function isProductionMode(): bool
