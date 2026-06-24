@@ -60,8 +60,14 @@ class TestTransactionCommand extends ContainerAwareCommand
 
         $io->success('Checkout de test créé avec succès !');
 
+        // Prefer redirectUrl from the API response (CAWL-specific domain),
+        // fall back to manually constructed checkoutUrl if not provided.
+        $paymentUrl = (!empty($result['redirectUrl']) ? $result['redirectUrl'] : null)
+            ?? $result['checkoutUrl']
+            ?? '';
+
         $io->writeln('<info>URL du paiement :</info>');
-        $io->writeln('  ' . $result['checkoutUrl']);
+        $io->writeln('  ' . $paymentUrl);
         $io->newLine();
         $io->writeln('<comment>Ouvrez cette URL dans votre navigateur pour simuler le paiement.</comment>');
         $io->writeln('<comment>Cartes de test Worldline : https://docs.direct.worldline-solutions.com/en/integration/test-cases</comment>');
