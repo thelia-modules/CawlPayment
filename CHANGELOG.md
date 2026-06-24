@@ -84,6 +84,49 @@ EventListeners/              - Écouteurs pour OpenAPI
 
 ---
 
+## [1.0.1] - 2026-06-24
+
+### Corrigé — Compatibilité Thelia 2.6
+
+#### `CawlPayment.php` — configureServices()
+- Suppression de la redéclaration de `FrontHook` dans `configureServices()` : elle écrasait silencieusement les tags `hook.event_listener` déclarés dans `config.xml`, empêchant le hook front de se déclencher.
+- Suppression de la redéclaration conditionnelle de `PaymentOptionsListener` : désormais géré exclusivement dans `config.xml`.
+- Suppression de la déclaration publique de `CsrfTokenService` (inutilisée).
+
+#### `Config/config.xml` — wiring des services
+- Ajout de l'argument `<argument type="service" id="CawlPayment\Service\CawlApiService" />` sur la déclaration `FrontHook` (correction critique — le hook ne se déclenchait jamais).
+- Déclaration de `PaymentOptionsListener` avec `on-invalid="null"` sur l'argument `open_api.model.factory` : le conteneur compile désormais correctement que le module OpenApi soit actif ou non.
+
+#### `EventListeners/PaymentOptionsListener.php`
+- Paramètre `$modelFactory` rendu nullable (`?ModelFactory`).
+- Ajout d'un guard `if ($this->modelFactory === null) { return; }` en début de `onPaymentGetOptions()`.
+
+#### `Hook/AdminHook.php`
+- Suppression de `new CawlPayment()` pour récupérer l'URL webhook : remplacé par `ConfigQuery::read('url_site')` (instanciation directe du module hors conteneur est non-standard).
+
+#### Suppression de `TestController`
+- `Controller/Admin/TestController.php` supprimé : HTML inline dans le PHP, pas d'héritage `BaseAdminController`, logique dupliquée de `ConfigurationController`.
+- Les 8 routes correspondantes retirées de `Config/routing.xml`.
+
+#### Suppression des attributs `#[Route]` PHP
+- Retirés de `ConfigurationController`, `PaymentController`, `WebhookController`, `AssetController` : `routing.xml` est la seule source de vérité pour les routes en T2.6.
+
+### Modifié — Interface back-office
+
+#### `templates/backOffice/default/module-configuration.html` — réécriture complète
+- Suppression du bloc `<style>` de 315 lignes de CSS custom.
+- Suppression de la barre violette avec dégradé (`.quick-actions`).
+- Suppression du lien "Open Test Dashboard" (route supprimée).
+- Remplacement des sections `.cawl-config-section` par `panel panel-default` / `panel-heading` / `panel-body`.
+- Remplacement du toggle d'environnement custom (`.env-switch`) par `btn-group data-toggle="buttons"`.
+- Remplacement des onglets credentials custom (JS/CSS maison) par `nav-tabs data-toggle="tab"` Bootstrap natif.
+- Remplacement de `.credentials-grid` par `.row .col-md-6`.
+- Bouton Save normalisé en `btn btn-primary` (sans taille forcée ni style inline).
+- Bouton "Test API Connection" intégré directement dans la barre de titre (`pull-right`).
+- Nettoyage JS : suppression du gestionnaire custom de tabs credentials ; conservation du test de connexion AJAX, `loadPaymentProducts` et `copyWebhookUrl`.
+
+---
+
 ## [Unreleased]
 
 ### Prévu

@@ -166,10 +166,10 @@ class ConfigurationController extends BaseAdminController
             $result = $apiService->getPaymentProducts($amount, $currency, $country);
 
             return new JsonResponse($result);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return new JsonResponse([
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => $this->formatApiError($e),
             ], 500);
         }
     }
@@ -189,11 +189,20 @@ class ConfigurationController extends BaseAdminController
             $result = $apiService->testConnection();
 
             return new JsonResponse($result);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return new JsonResponse([
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => $this->formatApiError($e),
             ], 500);
         }
+    }
+
+    private function formatApiError(\Throwable $e): string
+    {
+        if ($e instanceof \Error && str_contains($e->getMessage(), 'OnlinePayments\Sdk')) {
+            return 'Le SDK Worldline n\'est pas installé. Exécutez : composer require online-payments/sdk-php:^5.0';
+        }
+
+        return $e->getMessage();
     }
 }
