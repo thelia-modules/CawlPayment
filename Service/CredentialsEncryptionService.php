@@ -208,14 +208,6 @@ class CredentialsEncryptionService
             }
         }
 
-        // Si c'est une chaine alphanumerique simple avec tirets/underscores,
-        // c'est une API key en clair (pas du base64 chiffre).
-        // Les valeurs chiffrees par notre service contiennent des caracteres
-        // base64 non-hex (+, /, =) car elles encodent des donnees binaires aleatoires.
-        if (preg_match('/^[a-zA-Z0-9_\-]+$/', $value)) {
-            return true;
-        }
-
         // Les chaines purement hexadecimales sont des API keys, pas du chiffre
         if (preg_match('/^[0-9A-Fa-f]+$/', $value)) {
             return true;

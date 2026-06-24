@@ -98,7 +98,7 @@ class WebhookController extends BaseFrontController
     /**
      * Confirm payment and update order status to PAID
      */
-    private function confirmPayment(int $orderId, Tlog $logger): void
+    protected function confirmPayment(int $orderId, Tlog $logger): void
     {
         $order = OrderQuery::create()->findPk($orderId);
 

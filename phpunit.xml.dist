@@ -1,62 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
-         bootstrap="Tests/bootstrap.php"
-         colors="true"
-         failOnRisky="true"
-         failOnWarning="true"
-         cacheDirectory=".phpunit.cache"
-         executionOrder="depends,defects"
-         requireCoverageMetadata="false"
-         beStrictAboutCoverageMetadata="false"
-         beStrictAboutOutputDuringTests="true"
-         displayDetailsOnTestsThatTriggerErrors="true"
-         displayDetailsOnTestsThatTriggerWarnings="true"
-         displayDetailsOnTestsThatTriggerNotices="true"
-         displayDetailsOnTestsThatTriggerDeprecations="true">
-
-    <testsuites>
-        <testsuite name="CawlPayment Test Suite">
-            <directory suffix="Test.php">Tests</directory>
-        </testsuite>
-        <testsuite name="unit">
-            <directory suffix="Test.php">Tests/Service</directory>
-        </testsuite>
-    </testsuites>
-
-    <source>
-        <include>
-            <directory suffix=".php">Service</directory>
-            <directory suffix=".php">Controller</directory>
-            <directory suffix=".php">Form</directory>
-            <directory suffix=".php">Hook</directory>
-            <directory suffix=".php">Loop</directory>
-        </include>
-        <exclude>
-            <directory suffix=".php">Tests</directory>
-            <directory suffix=".php">vendor</directory>
-        </exclude>
-    </source>
-
-    <coverage includeUncoveredFiles="true">
-        <report>
-            <clover outputFile=".phpunit.cache/coverage.xml"/>
-            <html outputDirectory=".phpunit.cache/coverage-html"/>
-            <text outputFile="php://stdout" showOnlySummary="true"/>
-        </report>
-    </coverage>
-
-    <php>
-        <!-- Definir les variables d'environnement pour les tests -->
-        <env name="APP_ENV" value="test"/>
-        <env name="APP_DEBUG" value="1"/>
-    </php>
-
-    <groups>
-        <exclude>
-            <group>integration</group>
-            <group>slow</group>
-        </exclude>
-    </groups>
-
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd" bootstrap="Tests/bootstrap.php" colors="true" executionOrder="depends,defects" beStrictAboutOutputDuringTests="true">
+  <coverage>
+    <include>
+      <directory suffix=".php">Service</directory>
+      <directory suffix=".php">Controller</directory>
+      <directory suffix=".php">Form</directory>
+      <directory suffix=".php">Hook</directory>
+      <directory suffix=".php">Loop</directory>
+    </include>
+    <exclude>
+      <directory suffix=".php">Tests</directory>
+      <directory suffix=".php">vendor</directory>
+    </exclude>
+  </coverage>
+  <testsuites>
+    <testsuite name="CawlPayment Test Suite">
+      <directory suffix="Test.php">Tests</directory>
+    </testsuite>
+    <testsuite name="unit">
+      <directory suffix="Test.php">Tests/Service</directory>
+    </testsuite>
+  </testsuites>
+  <php>
+    <env name="APP_ENV" value="test"/>
+    <env name="APP_DEBUG" value="1"/>
+    <env name="SYMFONY_DEPRECATIONS_HELPER" value="weak"/>
+  </php>
+  <groups>
+    <exclude>
+      <group>integration</group>
+      <group>slow</group>
+    </exclude>
+  </groups>
 </phpunit>

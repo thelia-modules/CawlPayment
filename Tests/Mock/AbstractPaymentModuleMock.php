@@ -31,20 +31,20 @@ abstract class AbstractPaymentModuleMock
      * @param string $default La valeur par defaut
      * @return string La valeur de configuration
      */
-    public static function getConfigValue(string $key, string $default = ''): string
+    public static function getConfigValue(string $key, mixed $default = ''): string
     {
-        return static::$configValues[$key] ?? $default;
+        return static::$configValues[$key] ?? (string) $default;
     }
 
     /**
      * Definit une valeur de configuration du module
      *
      * @param string $key La cle de configuration
-     * @param string $value La valeur a stocker
+     * @param mixed $value La valeur a stocker
      */
-    public static function setConfigValue(string $key, string $value): void
+    public static function setConfigValue(string $key, mixed $value): void
     {
-        static::$configValues[$key] = $value;
+        static::$configValues[$key] = (string) $value;
     }
 
     /**
@@ -68,12 +68,34 @@ abstract class AbstractPaymentModuleMock
     }
 
     /**
+     * Montant simulé retourné par getCurrentOrderTotalAmount()
+     */
+    protected static float $currentOrderAmount = 0.0;
+
+    /**
      * Reinitialise toutes les valeurs de configuration (pour les tests)
      */
     public static function resetConfig(): void
     {
         static::$configValues = [];
         static::$productionMode = false;
+        static::$currentOrderAmount = 0.0;
+    }
+
+    /**
+     * Simule le montant de la commande en cours (pour les tests d'isValidPayment)
+     */
+    public static function setCurrentOrderAmount(float $amount): void
+    {
+        static::$currentOrderAmount = $amount;
+    }
+
+    /**
+     * Retourne le montant simulé de la commande en cours
+     */
+    public function getCurrentOrderTotalAmount(): float
+    {
+        return static::$currentOrderAmount;
     }
 
     /**

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 // Stubs pour les classes OpenApi (module optionnel, absent en environnement de test)
 namespace OpenApi\Events {
-    if (!class_exists(OpenApiEvents::class, false)) {
+    if (!class_exists(\OpenApi\Events\OpenApiEvents::class, false)) {
         class OpenApiEvents
         {
             public const MODULE_PAYMENT_GET_OPTIONS = 'module.payment.get.options';
         }
     }
 
-    if (!class_exists(PaymentModuleOptionEvent::class, false)) {
+    if (!class_exists(\OpenApi\Events\PaymentModuleOptionEvent::class, false)) {
         class PaymentModuleOptionEvent
         {
             private object $module;
@@ -41,7 +41,7 @@ namespace OpenApi\Events {
 }
 
 namespace OpenApi\Model\Api {
-    if (!class_exists(ModelFactory::class, false)) {
+    if (!class_exists(\OpenApi\Model\Api\ModelFactory::class, false)) {
         class ModelFactory
         {
             public function buildModel(string $type): object
@@ -67,196 +67,197 @@ namespace OpenApi\Model\Api {
     }
 }
 
-// Namespace du test
-namespace CawlPayment\Tests\EventListeners;
+namespace CawlPayment\Tests\EventListeners {
+    use CawlPayment\CawlPayment;
+    use CawlPayment\EventListeners\PaymentOptionsListener;
+    use CawlPayment\Service\CawlApiService;
+    use CawlPayment\Tests\Mock\TlogMock;
+    use OpenApi\Events\PaymentModuleOptionEvent;
+    use OpenApi\Model\Api\ModelFactory;
+    use PHPUnit\Framework\TestCase;
 
-use CawlPayment\CawlPayment;
-use CawlPayment\EventListeners\PaymentOptionsListener;
-use CawlPayment\Service\CawlApiService;
-use CawlPayment\Tests\Mock\TlogMock;
-use OpenApi\Events\PaymentModuleOptionEvent;
-use OpenApi\Model\Api\ModelFactory;
-use PHPUnit\Framework\TestCase;
-
-/**
- * Tests unitaires pour PaymentOptionsListener
- *
- * Couvre :
- *  - getSubscribedEvents()    : mapping événement → méthode
- *  - onPaymentGetOptions()    : tous les cas de garde et le chemin nominal
- */
-class PaymentOptionsListenerTest extends TestCase
-{
-    private CawlApiService $apiServiceMock;
-    private ModelFactory $modelFactoryMock;
-
-    protected function setUp(): void
+    /**
+     * Tests unitaires pour PaymentOptionsListener
+     *
+     * Couvre :
+     *  - getSubscribedEvents()    : mapping événement → méthode
+     *  - onPaymentGetOptions()    : tous les cas de garde et le chemin nominal
+     */
+    class PaymentOptionsListenerTest extends TestCase
     {
-        CawlPayment::resetConfig();
-        TlogMock::reset();
+        private CawlApiService $apiServiceMock;
+        private ModelFactory $modelFactoryMock;
 
-        $this->apiServiceMock = $this->createMock(CawlApiService::class);
-        $this->modelFactoryMock = $this->createMock(ModelFactory::class);
-    }
+        protected function setUp(): void
+        {
+            CawlPayment::resetConfig();
+            TlogMock::reset();
 
-    protected function tearDown(): void
-    {
-        CawlPayment::resetConfig();
-        TlogMock::reset();
-    }
+            $this->apiServiceMock = $this->createMock(CawlApiService::class);
+            $this->modelFactoryMock = $this->createMock(ModelFactory::class);
+        }
 
-    private function makeEvent(string $moduleCode): PaymentModuleOptionEvent
-    {
-        $module = new class($moduleCode) {
-            public function __construct(private string $code) {}
-            public function getCode(): string { return $this->code; }
-        };
+        protected function tearDown(): void
+        {
+            CawlPayment::resetConfig();
+            TlogMock::reset();
+        }
 
-        $event = new PaymentModuleOptionEvent();
-        $event->setModule($module);
-        return $event;
-    }
+        private function makeEvent(string $moduleCode): PaymentModuleOptionEvent
+        {
+            $module = new class($moduleCode) {
+                public function __construct(private string $code) {}
+                public function getCode(): string { return $this->code; }
+            };
 
-    // =========================================================================
-    // getSubscribedEvents()
-    // =========================================================================
+            $event = new PaymentModuleOptionEvent();
+            $event->setModule($module);
+            return $event;
+        }
 
-    public function testGetSubscribedEventsReturnsCorrectMapping(): void
-    {
-        $events = PaymentOptionsListener::getSubscribedEvents();
+        // =========================================================================
+        // getSubscribedEvents()
+        // =========================================================================
 
-        $this->assertArrayHasKey(\OpenApi\Events\OpenApiEvents::MODULE_PAYMENT_GET_OPTIONS, $events);
+        public function testGetSubscribedEventsReturnsCorrectMapping(): void
+        {
+            $events = PaymentOptionsListener::getSubscribedEvents();
 
-        $handler = $events[\OpenApi\Events\OpenApiEvents::MODULE_PAYMENT_GET_OPTIONS];
-        $this->assertSame('onPaymentGetOptions', $handler[0]);
-        $this->assertSame(128, $handler[1]);
-    }
+            $this->assertArrayHasKey(\OpenApi\Events\OpenApiEvents::MODULE_PAYMENT_GET_OPTIONS, $events);
 
-    // =========================================================================
-    // onPaymentGetOptions() — gardes
-    // =========================================================================
+            $handler = $events[\OpenApi\Events\OpenApiEvents::MODULE_PAYMENT_GET_OPTIONS];
+            $this->assertSame('onPaymentGetOptions', $handler[0]);
+            $this->assertSame(128, $handler[1]);
+        }
 
-    public function testOnPaymentGetOptionsDoesNothingWhenModelFactoryIsNull(): void
-    {
-        $listener = new PaymentOptionsListener(null, $this->apiServiceMock);
-        $event = $this->makeEvent('CawlPayment');
+        // =========================================================================
+        // onPaymentGetOptions() — gardes
+        // =========================================================================
 
-        $this->apiServiceMock->expects($this->never())->method('getEnabledPaymentMethods');
+        public function testOnPaymentGetOptionsDoesNothingWhenModelFactoryIsNull(): void
+        {
+            $listener = new PaymentOptionsListener(null, $this->apiServiceMock);
+            $event = $this->makeEvent('CawlPayment');
 
-        $listener->onPaymentGetOptions($event);
+            $this->apiServiceMock->expects($this->never())->method('getEnabledPaymentMethods');
 
-        $this->assertEmpty($event->getAppendedGroups());
-    }
+            $listener->onPaymentGetOptions($event);
 
-    public function testOnPaymentGetOptionsDoesNothingForOtherModule(): void
-    {
-        $listener = new PaymentOptionsListener($this->modelFactoryMock, $this->apiServiceMock);
-        $event = $this->makeEvent('OtherPaymentModule');
+            $this->assertEmpty($event->getAppendedGroups());
+        }
 
-        $this->apiServiceMock->expects($this->never())->method('getEnabledPaymentMethods');
+        public function testOnPaymentGetOptionsDoesNothingForOtherModule(): void
+        {
+            $listener = new PaymentOptionsListener($this->modelFactoryMock, $this->apiServiceMock);
+            $event = $this->makeEvent('OtherPaymentModule');
 
-        $listener->onPaymentGetOptions($event);
+            $this->apiServiceMock->expects($this->never())->method('getEnabledPaymentMethods');
 
-        $this->assertEmpty($event->getAppendedGroups());
-    }
+            $listener->onPaymentGetOptions($event);
 
-    public function testOnPaymentGetOptionsDoesNothingWhenNoEnabledMethods(): void
-    {
-        $listener = new PaymentOptionsListener($this->modelFactoryMock, $this->apiServiceMock);
-        $event = $this->makeEvent('CawlPayment');
+            $this->assertEmpty($event->getAppendedGroups());
+        }
 
-        $this->apiServiceMock->method('getEnabledPaymentMethods')->willReturn([]);
-        $this->modelFactoryMock->expects($this->never())->method('buildModel');
+        public function testOnPaymentGetOptionsDoesNothingWhenNoEnabledMethods(): void
+        {
+            $listener = new PaymentOptionsListener($this->modelFactoryMock, $this->apiServiceMock);
+            $event = $this->makeEvent('CawlPayment');
 
-        $listener->onPaymentGetOptions($event);
+            $this->apiServiceMock->method('getEnabledPaymentMethods')->willReturn([]);
+            $this->modelFactoryMock->expects($this->never())->method('buildModel');
 
-        $this->assertEmpty($event->getAppendedGroups());
-    }
+            $listener->onPaymentGetOptions($event);
 
-    // =========================================================================
-    // onPaymentGetOptions() — chemin nominal
-    // =========================================================================
+            $this->assertEmpty($event->getAppendedGroups());
+        }
 
-    public function testOnPaymentGetOptionsAppendsOptionGroupForEnabledMethods(): void
-    {
-        $listener = new PaymentOptionsListener($this->modelFactoryMock, $this->apiServiceMock);
-        $event = $this->makeEvent('CawlPayment');
+        // =========================================================================
+        // onPaymentGetOptions() — chemin nominal
+        // =========================================================================
 
-        $enabledMethods = [
-            'visa' => ['id' => 1, 'name' => 'Visa', 'category' => 'card', 'icon' => ''],
-            'mastercard' => ['id' => 3, 'name' => 'Mastercard', 'category' => 'card', 'icon' => ''],
-        ];
-        $this->apiServiceMock->method('getEnabledPaymentMethods')->willReturn($enabledMethods);
-        $this->apiServiceMock->method('getPaymentProductsCached')->willReturn(['success' => false]);
+        public function testOnPaymentGetOptionsAppendsOptionGroupForEnabledMethods(): void
+        {
+            $listener = new PaymentOptionsListener($this->modelFactoryMock, $this->apiServiceMock);
+            $event = $this->makeEvent('CawlPayment');
 
-        // buildModel est appelé : 1 fois pour le groupe + 2 fois pour les options
-        $callCount = 0;
-        $this->modelFactoryMock
-            ->method('buildModel')
-            ->willReturnCallback(function () use (&$callCount) {
-                $callCount++;
-                return new class {
-                    public function __call(string $name, array $args): static { return $this; }
-                    public function appendPaymentModuleOption(object $o): static { return $this; }
-                };
-            });
+            $enabledMethods = [
+                'visa' => ['id' => 1, 'name' => 'Visa', 'category' => 'card', 'icon' => ''],
+                'mastercard' => ['id' => 3, 'name' => 'Mastercard', 'category' => 'card', 'icon' => ''],
+            ];
+            $this->apiServiceMock->method('getEnabledPaymentMethods')->willReturn($enabledMethods);
+            $this->apiServiceMock->method('getPaymentProductsCached')->willReturn(['success' => false]);
 
-        $listener->onPaymentGetOptions($event);
+            // buildModel est appelé : 1 fois pour le groupe + 2 fois pour les options
+            $callCount = 0;
+            $this->modelFactoryMock
+                ->method('buildModel')
+                ->willReturnCallback(function () use (&$callCount) {
+                    $callCount++;
+                    return new class {
+                        public function __call(string $name, array $args): static { return $this; }
+                        public function appendPaymentModuleOption(object $o): static { return $this; }
+                    };
+                });
 
-        $this->assertCount(1, $event->getAppendedGroups(), 'Un seul groupe d\'options doit être ajouté à l\'événement');
-        $this->assertSame(3, $callCount, 'buildModel doit être appelé 3 fois (1 groupe + 2 options)');
-    }
+            $listener->onPaymentGetOptions($event);
 
-    public function testOnPaymentGetOptionsUsesLogoFromApiWhenAvailable(): void
-    {
-        $listener = new PaymentOptionsListener($this->modelFactoryMock, $this->apiServiceMock);
-        $event = $this->makeEvent('CawlPayment');
+            $this->assertCount(1, $event->getAppendedGroups(), 'Un seul groupe d\'options doit être ajouté à l\'événement');
+            $this->assertSame(3, $callCount, 'buildModel doit être appelé 3 fois (1 groupe + 2 options)');
+        }
 
-        $enabledMethods = [
-            'visa' => ['id' => 1, 'name' => 'Visa', 'category' => 'card', 'icon' => ''],
-        ];
-        $this->apiServiceMock->method('getEnabledPaymentMethods')->willReturn($enabledMethods);
-        $this->apiServiceMock->method('getPaymentProductsCached')->willReturn([
-            'success' => true,
-            'products' => [
-                ['id' => 1, 'displayHints' => ['logo' => 'https://cdn.example.com/visa.png']],
-            ],
-        ]);
+        public function testOnPaymentGetOptionsUsesLogoFromApiWhenAvailable(): void
+        {
+            $listener = new PaymentOptionsListener($this->modelFactoryMock, $this->apiServiceMock);
+            $event = $this->makeEvent('CawlPayment');
 
-        $capturedImage = null;
-        $this->modelFactoryMock
-            ->method('buildModel')
-            ->willReturnCallback(function (string $type) use (&$capturedImage) {
-                return new class($type, $capturedImage) {
-                    private string $type;
-                    private mixed &$capturedImage;
+            $enabledMethods = [
+                'visa' => ['id' => 1, 'name' => 'Visa', 'category' => 'card', 'icon' => ''],
+            ];
+            $this->apiServiceMock->method('getEnabledPaymentMethods')->willReturn($enabledMethods);
+            $this->apiServiceMock->method('getPaymentProductsCached')->willReturn([
+                'success' => true,
+                'products' => [
+                    ['id' => 1, 'displayHints' => ['logo' => 'https://cdn.example.com/visa.png']],
+                ],
+            ]);
 
-                    public function __construct(string $type, mixed &$capturedImage)
-                    {
-                        $this->type = $type;
-                        $this->capturedImage = &$capturedImage;
-                    }
+            // Objet partagé pour capturer l'URL sans référence sur propriété typée (non supporté PHP 8.2)
+            $capture = new class { public ?string $image = null; };
 
-                    public function __call(string $name, array $args): static { return $this; }
+            $this->modelFactoryMock
+                ->method('buildModel')
+                ->willReturnCallback(function (string $type) use ($capture) {
+                    return new class($type, $capture) {
+                        private string $type;
+                        private object $capture;
 
-                    public function setImage(string $url): static
-                    {
-                        if ($this->type === 'PaymentModuleOption') {
-                            $this->capturedImage = $url;
+                        public function __construct(string $type, object $capture)
+                        {
+                            $this->type = $type;
+                            $this->capture = $capture;
                         }
-                        return $this;
-                    }
 
-                    public function appendPaymentModuleOption(object $o): static { return $this; }
-                };
-            });
+                        public function __call(string $name, array $args): static { return $this; }
 
-        $listener->onPaymentGetOptions($event);
+                        public function setImage(string $url): static
+                        {
+                            if ($this->type === 'PaymentModuleOption') {
+                                $this->capture->image = $url;
+                            }
+                            return $this;
+                        }
 
-        $this->assertSame(
-            'https://cdn.example.com/visa.png',
-            $capturedImage,
-            'L\'URL du logo de l\'API doit être passée à l\'option'
-        );
+                        public function appendPaymentModuleOption(object $o): static { return $this; }
+                    };
+                });
+
+            $listener->onPaymentGetOptions($event);
+
+            $this->assertSame(
+                'https://cdn.example.com/visa.png',
+                $capture->image,
+                'L\'URL du logo de l\'API doit être passée à l\'option'
+            );
+        }
     }
 }

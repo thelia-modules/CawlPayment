@@ -610,11 +610,7 @@ class CawlApiService
         }
 
         // Find transaction by order reference
-        $transaction = CawlTransactionQuery::create()
-            ->useOrderQuery()
-                ->filterByRef($merchantReference)
-            ->endUse()
-            ->findOne();
+        $transaction = $this->findTransactionByMerchantReference($merchantReference);
 
         if (!$transaction) {
             $this->log("Transaction not found for reference: {$merchantReference}", 'error');
@@ -629,7 +625,7 @@ class CawlApiService
         $transaction->setStatus($this->mapCawlStatus($status));
         $transaction->setStatusCode($statusCode);
         $transaction->setRawResponse(json_encode($payload));
-        $transaction->save();
+        $this->saveTransaction($transaction);
 
         $this->log("Webhook processed: reference {$merchantReference}, status: {$status}");
 
@@ -639,6 +635,20 @@ class CawlApiService
             'status' => $this->mapCawlStatus($status),
             'is_paid' => $this->isSuccessStatus($status),
         ];
+    }
+
+    protected function findTransactionByMerchantReference(string $merchantRef): ?CawlTransaction
+    {
+        return CawlTransactionQuery::create()
+            ->useOrderQuery()
+                ->filterByRef($merchantRef)
+            ->endUse()
+            ->findOne();
+    }
+
+    protected function saveTransaction(CawlTransaction $transaction): void
+    {
+        $transaction->save();
     }
 
     /**
