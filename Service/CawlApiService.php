@@ -541,7 +541,7 @@ class CawlApiService
 
             // Build hosted checkout specific input
             $baseUrl = \Thelia\Model\ConfigQuery::read('url_site', '');
-            $returnUrl = rtrim($baseUrl, '/') . '/admin/cawlpayment/test-return';
+            $returnUrl = rtrim($baseUrl, '/') . '/cawlpayment/test-return';
 
             $hostedCheckoutInput = new HostedCheckoutSpecificInput();
             $hostedCheckoutInput->setReturnUrl($returnUrl);

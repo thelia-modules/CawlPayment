@@ -296,4 +296,35 @@ class PaymentController extends BaseFrontController
             $order->save();
         }
     }
+
+    /**
+     * Return URL called by Worldline after a test hosted checkout (cawlpayment:test-transaction command).
+     *
+     * Returning 200 is enough to close the hosted checkout session properly.
+     * The JSON body shows the payment status for debugging purposes.
+     */
+    public function testReturnAction(Request $request): JsonResponse
+    {
+        $hostedCheckoutId = $request->query->get('hostedCheckoutId', '');
+
+        if (empty($hostedCheckoutId)) {
+            return new JsonResponse(['success' => false, 'error' => 'Missing hostedCheckoutId'], 400);
+        }
+
+        try {
+            $status = $this->apiService->getHostedCheckoutStatus($hostedCheckoutId);
+
+            return new JsonResponse([
+                'success' => true,
+                'hostedCheckoutId' => $hostedCheckoutId,
+                'status' => $status,
+            ]);
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'success' => false,
+                'hostedCheckoutId' => $hostedCheckoutId,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

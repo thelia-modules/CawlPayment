@@ -64,5 +64,9 @@
         <default key="_controller">CawlPayment\Controller\Admin\ConfigurationController::testConnectionAction</default>
     </route>
 
+    <route id="cawlpayment.front.test_return" path="/cawlpayment/test-return" methods="GET">
+        <default key="_controller">CawlPayment\Controller\Front\PaymentController::testReturnAction</default>
+    </route>
+
 
 </routes>
