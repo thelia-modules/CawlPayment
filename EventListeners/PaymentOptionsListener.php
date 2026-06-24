@@ -18,11 +18,11 @@ use Thelia\Core\Translation\Translator;
  */
 class PaymentOptionsListener implements EventSubscriberInterface
 {
-    private ModelFactory $modelFactory;
+    private ?ModelFactory $modelFactory;
     private CawlApiService $apiService;
 
     public function __construct(
-        ModelFactory $modelFactory,
+        ?ModelFactory $modelFactory,
         CawlApiService $apiService
     ) {
         $this->modelFactory = $modelFactory;
@@ -46,6 +46,10 @@ class PaymentOptionsListener implements EventSubscriberInterface
 
     public function onPaymentGetOptions(PaymentModuleOptionEvent $event): void
     {
+        if ($this->modelFactory === null) {
+            return;
+        }
+
         $module = $event->getModule();
 
         // Only handle CawlPayment module
