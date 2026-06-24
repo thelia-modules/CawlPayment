@@ -467,7 +467,7 @@ class CawlApiService
                 'paymentId' => $paymentId,
                 'paymentStatus' => $paymentStatus,
                 'statusCode' => $statusCode,
-                'isPaid' => $this->isSuccessStatus($status),
+                'isPaid' => $paymentStatus !== null && $this->isSuccessStatus($paymentStatus),
             ];
         } catch (\Exception $e) {
             $this->log("Failed to get hosted checkout status: " . $e->getMessage(), 'error');

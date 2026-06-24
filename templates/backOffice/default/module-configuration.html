@@ -278,6 +278,11 @@
                                         <i class="glyphicon glyphicon-refresh" id="refresh-logs-icon"></i> {intl d='cawlpayment' l='Refresh'}
                                     </button>
                                 </h4>
+                                <p class="text-muted" style="font-size:13px">
+                                    {intl d='cawlpayment' l='Shows the last 50 lines from'} <code>var/log/log-thelia.txt</code> {intl d='cawlpayment' l='filtered on'} <code>[CawlPayment]</code>.
+                                    {intl d='cawlpayment' l='After a test payment, click Refresh and look for a'} <code style="color:#6a9955">[CawlPayment][test-return]</code> {intl d='cawlpayment' l='line.'}<br>
+                                    {intl d='cawlpayment' l='Key fields to check:'} <strong>isPaid</strong> {intl d='cawlpayment' l='(oui/non)'}, <strong>status</strong> {intl d='cawlpayment' l='(PAYMENT_CREATED, CANCELLED_BY_CONSUMER…)'}, <strong>statusCode</strong> {intl d='cawlpayment' l='(5 = authorised, 9 = captured, 0 = rejected)'}.
+                                </p>
                                 <pre id="cawl-log-output" style="background:#1e1e1e;color:#d4d4d4;max-height:300px;overflow-y:auto;font-size:11px;padding:10px;border-radius:4px">{intl d='cawlpayment' l='Loading...'}</pre>
 
                             </div>

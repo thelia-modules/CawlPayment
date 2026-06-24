@@ -352,6 +352,17 @@ Worldline redirigera vers l'URL ngrok après le paiement. Le résultat (statut, 
 
 > **Note** : le plan gratuit ngrok affiche une page d'avertissement à la première visite — cliquer sur "Visit Site" pour continuer.
 
+### Créer une transaction de test (interface admin)
+
+Depuis **Admin > CawlPayment > Configuration > Test Credentials**, un panneau **"Create a test transaction"** permet de lancer un checkout sandbox sans passer par le terminal :
+
+1. Saisir le montant en euros et la devise (défaut : 10,00 EUR)
+2. Cliquer **"Create test transaction"** — le module vérifie la configuration puis appelle l'API
+3. Un lien **"Open checkout"** apparaît avec le `hostedCheckoutId` — cliquer pour accéder à la page de paiement Worldline
+4. Après le paiement, utiliser le panneau **"Module logs"** (juste en dessous) et cliquer **"Refresh"** pour voir le statut retourné par Worldline (`[CawlPayment][test-return]`)
+
+> Cette interface équivaut à `ddev exec php Thelia cawlpayment:test-transaction --amount=<n> --currency=EUR` sans quitter le navigateur.
+
 ### Lancer les tests unitaires
 
 ```bash
@@ -509,9 +520,35 @@ Format des logs :
 
 ---
 
+## Checklist mise en production
+
+Avant de basculer en mode production, vérifier les points suivants :
+
+- [ ] **Basculer l'environnement** sur `production` dans *Admin > CawlPayment > Environment*
+- [ ] **Renseigner les credentials de production** (PSPID, API Key, API Secret, Webhook Key, Webhook Secret)
+- [ ] **Vérifier le comportement de capture** sur le compte marchand CAWL production :
+  - **Auto-capture activée** → le paiement passe directement en `statusCode=9` (CAPTURED) après autorisation. Le webhook notifie quasi immédiatement et la commande est confirmée automatiquement.
+  - **Capture manuelle** → le paiement reste en `statusCode=5` (PENDING_CAPTURE) jusqu'à capture explicite depuis le portail marchand. La commande ne sera pas confirmée automatiquement — à adapter selon le process métier.
+  - ⚠️ **Ce point est critique** : un compte en capture manuelle sans process de capture explicite laissera les commandes en attente indéfiniment.
+- [ ] **Configurer l'URL webhook** dans le portail CAWL production (`https://votre-site.fr/cawlpayment/webhook`)
+- [ ] **Désactiver les logs** (*Admin > CawlPayment > Options > Enable logging*)
+- [ ] **Tester un paiement réel à faible montant** et vérifier le statut dans le portail marchand
+
+---
+
 ## Changelog
 
 Voir [CHANGELOG.md](CHANGELOG.md) pour l'historique complet des versions.
+
+### Version 1.1.0 (2026-06-24)
+
+- Interface admin de test : création de transaction sandbox sans terminal
+- Viewer de logs `[CawlPayment]` avec rafraîchissement en temps réel
+- Commande console `cawlpayment:test-transaction` avec vérifications pré-flight
+- Support ngrok : champ `test_base_url` + guide d'installation dans l'admin
+- Fix : `showResultPage(false)` pour déclencher la redirection Worldline
+- Fix : `webhook_key` sorti du chiffrement AES (identifiant, pas un secret)
+- Tests unitaires : CawlApiService, SecureConfigService, webhook, transactions
 
 ### Version 1.0.1 (2026-06-24)
 
@@ -528,6 +565,20 @@ Voir [CHANGELOG.md](CHANGELOG.md) pour l'historique complet des versions.
 - Support webhooks avec validation signature
 - Multi-langue (FR, EN, ES, IT, DE)
 - Intégration OpenAPI
+
+---
+
+## Bugs connus
+
+### Méthodes de paiement non filtrées en test
+
+En mode test, le hosted checkout Worldline affiche **toutes les méthodes de paiement disponibles** sur le compte marchand, indépendamment des méthodes sélectionnées dans la configuration du module.
+
+**Comportement attendu** : seules les méthodes cochées dans *Admin > CawlPayment > Payment Methods* devraient être proposées au client, y compris lors des tests via `cawlpayment:test-transaction` et l'interface admin.
+
+**Impact** : en production, le filtrage fonctionne via `PaymentProductFilters` passé à la création du hosted checkout. En test (`createTestHostedCheckout`), ce filtre n'est pas appliqué.
+
+**Workaround** : aucun pour l'instant — tester manuellement uniquement les méthodes censées être actives.
 
 ---
 
