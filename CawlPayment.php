@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace CawlPayment;
 
-use CawlPayment\EventListeners\PaymentOptionsListener;
 use CawlPayment\Service\CawlApiService;
 use CawlPayment\Service\CredentialsEncryptionService;
 use Propel\Runtime\Connection\ConnectionInterface;
@@ -116,12 +115,6 @@ class CawlPayment extends AbstractPaymentModule
             ->autowire(true)
             ->public();
 
-        // Only register when the OpenApi module is present
-        if (class_exists('OpenApi\Events\OpenApiEvents')) {
-            $servicesConfigurator->set(PaymentOptionsListener::class)
-                ->autowire(true)
-                ->tag('kernel.event_subscriber');
-        }
     }
 
     /**
