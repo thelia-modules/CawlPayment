@@ -238,6 +238,48 @@
                                            placeholder="https://xxxx.ngrok-free.app">
                                     <p class="help-block">{intl d='cawlpayment' l='Leave empty to use the site URL. Set to an ngrok/tunnel URL for local testing so Worldline can reach the return URL.'}</p>
                                 </div>
+
+                                <hr style="margin:20px 0">
+
+                                {* Test transaction launcher *}
+                                <h4><i class="glyphicon glyphicon-play-circle"></i> {intl d='cawlpayment' l='Create a test transaction'}</h4>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="test-amount">{intl d='cawlpayment' l='Amount (€)'}</label>
+                                            <input type="number" class="form-control" id="test-amount" value="10.00" min="0.01" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="test-currency">{intl d='cawlpayment' l='Currency'}</label>
+                                            <input type="text" class="form-control" id="test-currency" value="EUR" maxlength="3">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>&nbsp;</label>
+                                            <div>
+                                                <button type="button" class="btn btn-primary" id="btn-test-transaction">
+                                                    <i class="glyphicon glyphicon-play"></i> {intl d='cawlpayment' l='Create test transaction'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="test-transaction-result"></div>
+
+                                <hr style="margin:20px 0">
+
+                                {* Log viewer *}
+                                <h4>
+                                    <i class="glyphicon glyphicon-list-alt"></i> {intl d='cawlpayment' l='Module logs'}
+                                    <button type="button" class="btn btn-xs btn-default" id="btn-refresh-logs" style="margin-left:10px">
+                                        <i class="glyphicon glyphicon-refresh" id="refresh-logs-icon"></i> {intl d='cawlpayment' l='Refresh'}
+                                    </button>
+                                </h4>
+                                <pre id="cawl-log-output" style="background:#1e1e1e;color:#d4d4d4;max-height:300px;overflow-y:auto;font-size:11px;padding:10px;border-radius:4px">{intl d='cawlpayment' l='Loading...'}</pre>
+
                             </div>
 
                             {* Production credentials *}
@@ -882,6 +924,83 @@
 
             // Load payment products
             loadPaymentProducts();
+
+            // Test transaction
+            $('#btn-test-transaction').on('click', function() {
+                var btn = $(this);
+                var result = $('#test-transaction-result');
+                var amountEuros = parseFloat($('#test-amount').val()) || 10;
+                var amountCents = Math.round(amountEuros * 100);
+                var currency = ($('#test-currency').val().trim().toUpperCase()) || 'EUR';
+
+                btn.prop('disabled', true).html('<i class="glyphicon glyphicon-refresh glyphicon-spin"></i> {intl d="cawlpayment" l="Creating..." js=1}');
+                result.html('');
+
+                $.ajax({
+                    url: '/admin/module/CawlPayment/test-transaction',
+                    method: 'POST',
+                    data: { amount: amountCents, currency: currency },
+                    success: function(response) {
+                        if (response.success) {
+                            result.html(
+                                '<div class="alert alert-success">' +
+                                '<strong><i class="glyphicon glyphicon-ok"></i> {intl d="cawlpayment" l="Checkout created" js=1}</strong><br>' +
+                                'ID : <code>' + response.hostedCheckoutId + '</code><br>' +
+                                '<a href="' + response.checkoutUrl + '" target="_blank" class="btn btn-success btn-sm" style="margin-top:8px">' +
+                                '<i class="glyphicon glyphicon-new-window"></i> {intl d="cawlpayment" l="Open checkout" js=1}' +
+                                '</a>' +
+                                '</div>'
+                            );
+                        } else {
+                            result.html('<div class="alert alert-danger"><i class="glyphicon glyphicon-remove"></i> ' + response.error + '</div>');
+                        }
+                    },
+                    error: function(xhr) {
+                        var msg = xhr.responseJSON ? xhr.responseJSON.error : '{intl d="cawlpayment" l="Request failed" js=1}';
+                        result.html('<div class="alert alert-danger"><i class="glyphicon glyphicon-remove"></i> ' + msg + '</div>');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('<i class="glyphicon glyphicon-play"></i> {intl d="cawlpayment" l="Create test transaction" js=1}');
+                    }
+                });
+            });
+
+            // Logs
+            function loadCawlLogs() {
+                $.ajax({
+                    url: '/admin/module/CawlPayment/logs',
+                    method: 'GET',
+                    success: function(response) {
+                        var pre = $('#cawl-log-output');
+                        if (!response.lines || response.lines.length === 0) {
+                            pre.html('{intl d="cawlpayment" l="No CawlPayment logs found." js=1}');
+                            return;
+                        }
+                        var html = '';
+                        $.each(response.lines, function(i, line) {
+                            var escaped = $('<div>').text(line).html();
+                            var style = '';
+                            if (line.indexOf('[test-return]') !== -1) { style = 'color:#6a9955'; }
+                            else if (line.indexOf('Erreur') !== -1 || line.indexOf('Error') !== -1) { style = 'color:#f44747'; }
+                            html += '<span style="' + style + '">' + escaped + '</span>\n';
+                        });
+                        pre.html(html);
+                        pre.scrollTop(pre[0].scrollHeight);
+                    },
+                    error: function() {
+                        $('#cawl-log-output').text('{intl d="cawlpayment" l="Failed to load logs." js=1}');
+                    }
+                });
+            }
+
+            $('#btn-refresh-logs').on('click', function() {
+                var icon = $('#refresh-logs-icon');
+                icon.addClass('glyphicon-spin');
+                loadCawlLogs();
+                setTimeout(function() { icon.removeClass('glyphicon-spin'); }, 600);
+            });
+
+            loadCawlLogs();
         });
     });
 })();

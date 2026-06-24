@@ -177,6 +177,70 @@ class ConfigurationController extends BaseAdminController
         }
     }
 
+    public function createTestTransactionAction(Request $request): JsonResponse
+    {
+        if (null !== $response = $this->checkAuth(
+            AdminResources::MODULE,
+            ['CawlPayment'],
+            AccessManager::UPDATE
+        )) {
+            return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
+        }
+
+        if (CawlPayment::getConfigValue('environment') !== CawlPayment::ENV_TEST) {
+            return new JsonResponse(['success' => false, 'error' => 'Module must be set to test mode (Admin > CawlPayment > Environment)']);
+        }
+
+        if (empty(CawlPayment::getConfigValue('pspid'))
+            || empty(CawlPayment::getConfigValue('api_key_test'))
+            || empty(CawlPayment::getConfigValue('api_secret_test'))
+        ) {
+            return new JsonResponse(['success' => false, 'error' => 'Test credentials are incomplete (pspid, api_key_test, api_secret_test required)']);
+        }
+
+        $amountCents = (int) $request->request->get('amount', 1000);
+        $currency = strtoupper(trim((string) $request->request->get('currency', 'EUR')));
+
+        try {
+            $result = $this->apiService->createTestHostedCheckout($amountCents, $currency);
+
+            if (!($result['success'] ?? false)) {
+                return new JsonResponse(['success' => false, 'error' => $result['error'] ?? 'Unknown error']);
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'checkoutUrl' => $result['redirectUrl'] ?? $result['checkoutUrl'] ?? '',
+                'hostedCheckoutId' => $result['hostedCheckoutId'] ?? '',
+            ]);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'error' => $this->formatApiError($e)], 500);
+        }
+    }
+
+    public function getLogsAction(Request $request): JsonResponse
+    {
+        if (null !== $response = $this->checkAuth(
+            AdminResources::MODULE,
+            ['CawlPayment'],
+            AccessManager::VIEW
+        )) {
+            return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
+        }
+
+        $logFile = \defined('THELIA_ROOT') ? THELIA_ROOT . 'var/log/log-thelia.txt' : null;
+
+        if (!$logFile || !file_exists($logFile)) {
+            return new JsonResponse(['success' => true, 'lines' => ['Log file not found: var/log/log-thelia.txt']]);
+        }
+
+        $allLines = @file($logFile, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES) ?: [];
+        $recentLines = \array_slice($allLines, -500);
+        $cawlLines = array_values(array_filter($recentLines, static fn (string $l): bool => str_contains($l, '[CawlPayment]')));
+
+        return new JsonResponse(['success' => true, 'lines' => \array_slice($cawlLines, -50)]);
+    }
+
     public function testConnectionAction(Request $request): JsonResponse
     {
         if (null !== $response = $this->checkAuth(
