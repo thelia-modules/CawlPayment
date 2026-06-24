@@ -13,8 +13,17 @@
         <form name="cawlpayment.configuration" class="CawlPayment\Form\ConfigurationForm" />
     </forms>
 
+    <commands>
+        <command class="CawlPayment\Command\TestTransactionCommand" />
+    </commands>
+
     <!-- OpenApi integration: optional, ModelFactory is null if OpenApi is not active -->
     <services>
+        <service id="CawlPayment\Command\TestTransactionCommand" class="CawlPayment\Command\TestTransactionCommand">
+            <argument type="service" id="CawlPayment\Service\CawlApiService" />
+            <tag name="console.command" />
+        </service>
+
         <service id="CawlPayment\EventListeners\PaymentOptionsListener" class="CawlPayment\EventListeners\PaymentOptionsListener">
             <argument type="service" id="open_api.model.factory" on-invalid="null" />
             <argument type="service" id="CawlPayment\Service\CawlApiService" />
