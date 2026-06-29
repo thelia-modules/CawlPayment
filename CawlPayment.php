@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace CawlPayment;
 
-use CawlPayment\Hook\FrontHook;
 use CawlPayment\Service\CawlApiService;
 use CawlPayment\Service\CredentialsEncryptionService;
-use CawlPayment\Service\CsrfTokenService;
 use Propel\Runtime\Connection\ConnectionInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -85,14 +83,14 @@ class CawlPayment extends AbstractPaymentModule
     private static ?CredentialsEncryptionService $encryptionService = null;
 
     /**
-     * Configure services for dependency injection
+     * Configure services for dependency injection.
      *
-     * Note: Utilise __DIR__ pour l'exclusion car le module est dans local/modules,
-     * pas dans vendor/thelia/modules (THELIA_MODULE_DIR).
+     * Note: uses __DIR__ for exclusion because the module is in local/modules,
+     * not in vendor/thelia/modules (THELIA_MODULE_DIR).
+     * Hooks and loops are declared in config.xml — excluded from the generic load.
      */
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
-        // Services généraux (hors controllers)
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
             ->exclude([
                 __DIR__.'/I18n/*',
@@ -106,28 +104,17 @@ class CawlPayment extends AbstractPaymentModule
             ->autowire(true)
             ->autoconfigure(true);
 
-        // Controllers doivent être publics avec le tag controller.service_arguments
         $servicesConfigurator->load(self::getModuleCode().'\\Controller\\', __DIR__.'/Controller/')
             ->autowire(true)
             ->autoconfigure(true)
             ->public()
             ->tag('controller.service_arguments');
 
-        // CsrfTokenService doit être public pour être accessible depuis les hooks Thelia
-        // (les hooks ne sont pas instanciés par Symfony DI, ils utilisent $this->container->get())
-        $servicesConfigurator->set(CsrfTokenService::class)
-            ->autowire(true)
-            ->public();
-
-        // CawlApiService doit être public pour être accessible depuis le module (AbstractPaymentModule::pay())
+        // Must be public: accessed via $this->getContainer()->get() in pay()
         $servicesConfigurator->set(CawlApiService::class)
             ->autowire(true)
             ->public();
 
-        // FrontHook nécessite l'injection de CawlApiService via le constructeur
-        $servicesConfigurator->set('cawlpayment.hook.front', FrontHook::class)
-            ->autowire(true)
-            ->public();
     }
 
     /**

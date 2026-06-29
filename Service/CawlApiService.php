@@ -7,10 +7,10 @@ namespace CawlPayment\Service;
 use CawlPayment\CawlPayment;
 use CawlPayment\Model\CawlTransaction;
 use CawlPayment\Model\CawlTransactionQuery;
-use OnlinePayments\Sdk\Authentication\V1HmacAuthenticator;
 use OnlinePayments\Sdk\Client;
 use OnlinePayments\Sdk\Communicator;
 use OnlinePayments\Sdk\CommunicatorConfiguration;
+use OnlinePayments\Sdk\DefaultConnection;
 use OnlinePayments\Sdk\Domain\AmountOfMoney;
 use OnlinePayments\Sdk\Domain\ContactDetails;
 use OnlinePayments\Sdk\Domain\CreateHostedCheckoutRequest;
@@ -62,7 +62,7 @@ class CawlApiService
 
     private function isLoggingEnabled(): bool
     {
-        return (bool) CawlPayment::getConfigValue('enable_logging', true);
+        return (bool) CawlPayment::getConfigValue('enable_logging', '1');
     }
 
     private function isProductionMode(): bool
@@ -149,8 +149,8 @@ class CawlApiService
                 'CawlPayment/1.0.0'
             );
 
-            $authenticator = new V1HmacAuthenticator($communicatorConfig);
-            $communicator = new Communicator($communicatorConfig, $authenticator);
+            $connection = new DefaultConnection();
+            $communicator = new Communicator($connection, $communicatorConfig);
             $this->client = new Client($communicator);
         }
 
@@ -467,7 +467,7 @@ class CawlApiService
                 'paymentId' => $paymentId,
                 'paymentStatus' => $paymentStatus,
                 'statusCode' => $statusCode,
-                'isPaid' => $this->isSuccessStatus($status),
+                'isPaid' => $paymentStatus !== null && $this->isSuccessStatus($paymentStatus),
             ];
         } catch (\Exception $e) {
             $this->log("Failed to get hosted checkout status: " . $e->getMessage(), 'error');
@@ -540,13 +540,14 @@ class CawlApiService
             $sdkOrder->setReferences($references);
 
             // Build hosted checkout specific input
-            $baseUrl = \Thelia\Model\ConfigQuery::read('url_site', '');
-            $returnUrl = rtrim($baseUrl, '/') . '/admin/cawlpayment/test-return';
+            $testBaseUrl = \CawlPayment\CawlPayment::getConfigValue('test_base_url', '');
+            $baseUrl = !empty($testBaseUrl) ? $testBaseUrl : \Thelia\Model\ConfigQuery::read('url_site', '');
+            $returnUrl = rtrim($baseUrl, '/') . '/cawlpayment/test-return';
 
             $hostedCheckoutInput = new HostedCheckoutSpecificInput();
             $hostedCheckoutInput->setReturnUrl($returnUrl);
             $hostedCheckoutInput->setLocale($this->getLocale());
-            $hostedCheckoutInput->setShowResultPage(true);
+            $hostedCheckoutInput->setShowResultPage(false);
 
             // Build request
             $request = new CreateHostedCheckoutRequest();
@@ -610,11 +611,7 @@ class CawlApiService
         }
 
         // Find transaction by order reference
-        $transaction = CawlTransactionQuery::create()
-            ->useOrderQuery()
-                ->filterByRef($merchantReference)
-            ->endUse()
-            ->findOne();
+        $transaction = $this->findTransactionByMerchantReference($merchantReference);
 
         if (!$transaction) {
             $this->log("Transaction not found for reference: {$merchantReference}", 'error');
@@ -629,7 +626,7 @@ class CawlApiService
         $transaction->setStatus($this->mapCawlStatus($status));
         $transaction->setStatusCode($statusCode);
         $transaction->setRawResponse(json_encode($payload));
-        $transaction->save();
+        $this->saveTransaction($transaction);
 
         $this->log("Webhook processed: reference {$merchantReference}, status: {$status}");
 
@@ -639,6 +636,20 @@ class CawlApiService
             'status' => $this->mapCawlStatus($status),
             'is_paid' => $this->isSuccessStatus($status),
         ];
+    }
+
+    protected function findTransactionByMerchantReference(string $merchantRef): ?CawlTransaction
+    {
+        return CawlTransactionQuery::create()
+            ->useOrderQuery()
+                ->filterByRef($merchantRef)
+            ->endUse()
+            ->findOne();
+    }
+
+    protected function saveTransaction(CawlTransaction $transaction): void
+    {
+        $transaction->save();
     }
 
     /**

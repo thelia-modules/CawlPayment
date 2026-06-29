@@ -33,11 +33,50 @@ class TlogMock
     }
 
     /**
+     * Crée une nouvelle instance indépendante (API du vrai Tlog)
+     */
+    public static function getNewInstance(): self
+    {
+        return new self();
+    }
+
+    /**
+     * No-op : le vrai Tlog configure les destinations
+     */
+    public function setDestinations(string $destinations): self
+    {
+        return $this;
+    }
+
+    /**
+     * No-op : le vrai Tlog configure les paramètres d'une destination
+     */
+    public function setConfig(string $destination, mixed $level, string $path): self
+    {
+        return $this;
+    }
+
+    /**
      * Reinitialise l'instance (utile entre les tests)
      */
     public static function reset(): void
     {
         self::$instance = null;
+    }
+
+    public function addInfo(string $message): void
+    {
+        $this->log('info', $message);
+    }
+
+    public function addError(string $message): void
+    {
+        $this->log('error', $message);
+    }
+
+    public function addWarning(string $message): void
+    {
+        $this->log('warning', $message);
     }
 
     /**

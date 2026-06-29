@@ -29,8 +29,6 @@ class CredentialsEncryptionService
         'api_key_prod',
         'api_secret_test',
         'api_secret_prod',
-        'webhook_key_test',
-        'webhook_key_prod',
         'webhook_secret_test',
         'webhook_secret_prod',
     ];
@@ -206,14 +204,6 @@ class CredentialsEncryptionService
             if (str_starts_with(strtolower($value), $prefix)) {
                 return true;
             }
-        }
-
-        // Si c'est une chaine alphanumerique simple avec tirets/underscores,
-        // c'est une API key en clair (pas du base64 chiffre).
-        // Les valeurs chiffrees par notre service contiennent des caracteres
-        // base64 non-hex (+, /, =) car elles encodent des donnees binaires aleatoires.
-        if (preg_match('/^[a-zA-Z0-9_\-]+$/', $value)) {
-            return true;
         }
 
         // Les chaines purement hexadecimales sont des API keys, pas du chiffre

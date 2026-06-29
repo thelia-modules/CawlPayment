@@ -1,329 +1,21 @@
-<style>
-.cawl-tabs {
-    margin-bottom: 20px;
-}
-.cawl-tabs .nav-tabs > li > a {
-    font-weight: 500;
-}
-.cawl-config-section {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-.cawl-config-section h4 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-}
-.env-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-}
-.env-badge.test {
-    background: #fcf8e3;
-    color: #8a6d3b;
-    border: 1px solid #faebcc;
-}
-.env-badge.production {
-    background: #dff0d8;
-    color: #3c763d;
-    border: 1px solid #d6e9c6;
-}
-.webhook-url {
-    background: #f5f5f5;
-    padding: 10px 15px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 13px;
-    word-break: break-all;
-}
-.payment-methods-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-}
-.payment-method-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: #fff;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-.payment-method-item:hover {
-    border-color: #5bc0de;
-    background: #f8f9fa;
-}
-.payment-method-item.enabled {
-    border-color: #5cb85c;
-    background: #dff0d8;
-}
-.payment-method-item input[type="checkbox"] {
-    margin-right: 10px;
-}
-.payment-method-item .method-logo {
-    width: 40px;
-    height: 28px;
-    margin-right: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    border-radius: 4px;
-    border: 1px solid #eee;
-    overflow: hidden;
-}
-.payment-method-item .method-logo img,
-.payment-method-item .method-logo svg {
-    max-width: 36px;
-    max-height: 24px;
-    object-fit: contain;
-}
-.payment-method-item .method-name {
-    flex: 1;
-    font-size: 13px;
-}
-.category-section {
-    margin-bottom: 25px;
-}
-.category-section h5 {
-    margin-bottom: 15px;
-    color: #333;
-    font-weight: 600;
-    border-bottom: 2px solid #5bc0de;
-    padding-bottom: 5px;
-}
-.credentials-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 12px;
-    margin-left: 10px;
-}
-.credentials-status.configured {
-    color: #5cb85c;
-}
-.credentials-status.not-configured {
-    color: #d9534f;
-}
-
-/* Environment Switch - Elegant toggle */
-.env-switch {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-.env-switch-label {
-    font-weight: 500;
-    color: #555;
-}
-.env-toggle {
-    position: relative;
-    display: inline-flex;
-    background: #e9ecef;
-    border-radius: 25px;
-    padding: 4px;
-}
-.env-toggle input[type="radio"] {
-    display: none;
-}
-.env-toggle label {
-    padding: 8px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 13px;
-    transition: all 0.3s ease;
-    color: #666;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.env-toggle label:hover {
-    color: #333;
-}
-.env-toggle input[type="radio"]:checked + label {
-    background: #fff;
-    color: #333;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.env-toggle input[value="test"]:checked + label {
-    background: #fcf8e3;
-    color: #8a6d3b;
-}
-.env-toggle input[value="production"]:checked + label {
-    background: #dff0d8;
-    color: #3c763d;
-}
-.env-current-info {
-    margin-left: auto;
-    font-size: 12px;
-    color: #888;
-}
-
-/* Credentials panel with tabs */
-.env-credentials-panel {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-}
-.env-credentials-tabs {
-    display: flex;
-    background: #f5f5f5;
-    border-bottom: 1px solid #ddd;
-}
-.env-credentials-tabs .env-tab {
-    flex: 1;
-    padding: 12px 20px;
-    text-align: center;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    font-weight: 500;
-    color: #666;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-.env-credentials-tabs .env-tab:hover {
-    background: #eee;
-}
-.env-credentials-tabs .env-tab.active {
-    background: #fff;
-    color: #333;
-    border-bottom: 2px solid #5bc0de;
-    margin-bottom: -1px;
-}
-.env-credentials-tabs .env-tab.active.test-tab {
-    border-bottom-color: #f0ad4e;
-}
-.env-credentials-tabs .env-tab.active.prod-tab {
-    border-bottom-color: #5cb85c;
-}
-.env-credentials-content {
-    padding: 20px;
-}
-.env-credentials-content .env-pane {
-    display: none;
-}
-.env-credentials-content .env-pane.active {
-    display: block;
-}
-.env-links {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
-.env-links a {
-    font-size: 13px;
-}
-.credentials-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
-@media (max-width: 768px) {
-    .credentials-grid {
-        grid-template-columns: 1fr;
-    }
-}
-.webhook-keys-section {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-}
-.webhook-keys-section h6 {
-    margin-bottom: 15px;
-    color: #555;
-}
-
-/* Quick actions bar */
-.quick-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-.quick-actions .btn {
-    border: none;
-}
-.quick-actions .btn-test {
-    background: rgba(255,255,255,0.9);
-    color: #667eea;
-}
-.quick-actions .btn-test:hover {
-    background: #fff;
-}
-.quick-actions .test-result {
-    color: #fff;
-    margin-left: 10px;
-}
-.quick-actions .test-result.success {
-    color: #a5f3a5;
-}
-.quick-actions .test-result.error {
-    color: #ffb3b3;
-}
-
-/* Documentation links */
-.doc-links {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-.doc-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 15px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    color: #555;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    font-size: 13px;
-}
-.doc-link:hover {
-    background: #e9ecef;
-    color: #333;
-    text-decoration: none;
-}
-.doc-link i {
-    color: #5bc0de;
-}
-</style>
-
 <div class="general-block-decorator">
+
     {* Header *}
     <div class="row">
         <div class="col-md-12 title title-without-tabs">
-            <h3><i class="glyphicon glyphicon-credit-card"></i> {intl d='cawlpayment' l='CAWL Payment Configuration'}</h3>
-            <p class="text-muted">{intl d='cawlpayment' l='Configure your CAWL Solutions payment gateway'}</p>
+            <span class="pull-right" style="margin-top: -4px;">
+                <button type="button" class="btn btn-sm btn-default" id="btn-test-connection">
+                    <i class="glyphicon glyphicon-refresh"></i>
+                    {intl d='cawlpayment' l='Test API Connection'}
+                </button>
+                <span id="test-result" style="margin-left: 8px; font-size: 13px;"></span>
+            </span>
+            <i class="glyphicon glyphicon-credit-card"></i>
+            {intl d='cawlpayment' l='CAWL Payment Configuration'}
         </div>
     </div>
 
-    {* Success message *}
+    {* Alerts *}
     {if isset($smarty.get.success) && $smarty.get.success}
         <div class="alert alert-success">
             <i class="glyphicon glyphicon-ok-sign"></i>
@@ -331,7 +23,6 @@
         </div>
     {/if}
 
-    {* Error message *}
     {if isset($smarty.get.error) && $smarty.get.error}
         <div class="alert alert-danger">
             <i class="glyphicon glyphicon-exclamation-sign"></i>
@@ -339,154 +30,178 @@
         </div>
     {/if}
 
-    {* PSPID required warning *}
     {if empty($config.pspid)}
-        <div class="alert alert-warning" id="pspid-warning">
+        <div class="alert alert-warning">
             <i class="glyphicon glyphicon-warning-sign"></i>
-            <strong>{intl d='cawlpayment' l='PSPID required'}</strong> -
-            {intl d='cawlpayment' l='Please enter your PSPID (Merchant ID) to enable saving the configuration.'}
+            <strong>{intl d='cawlpayment' l='PSPID required'}</strong>
+            — {intl d='cawlpayment' l='Please enter your PSPID (Merchant ID) to enable saving the configuration.'}
         </div>
     {/if}
 
-    {* Quick Actions Bar *}
-    <div class="quick-actions">
-        <button type="button" class="btn btn-test" id="btn-test-connection">
-            <i class="glyphicon glyphicon-refresh"></i> {intl d='cawlpayment' l='Test API Connection'}
-        </button>
-        <a href="{url path='/admin/cawlpayment/api-test'}" class="btn btn-default" target="_blank">
-            <i class="glyphicon glyphicon-new-window"></i> {intl d='cawlpayment' l='Open Test Dashboard'}
-        </a>
-        <span id="test-result" class="test-result"></span>
-        <span class="env-current-info">
-            <span class="env-badge {if $is_production}production{else}test{/if}">
-                {if $is_production}{intl d='cawlpayment' l='Production'}{else}{intl d='cawlpayment' l='Test'}{/if}
-            </span>
-        </span>
-    </div>
-
-    {* Tabs *}
-    <div class="cawl-tabs">
-        <ul class="nav nav-tabs" role="tablist">
-            <li role="presentation" class="active">
-                <a href="#credentials" aria-controls="credentials" role="tab" data-toggle="tab">
-                    <i class="glyphicon glyphicon-lock"></i> {intl d='cawlpayment' l='Credentials'}
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#payment-methods" aria-controls="payment-methods" role="tab" data-toggle="tab">
-                    <i class="glyphicon glyphicon-list"></i> {intl d='cawlpayment' l='Payment Methods'}
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#options" aria-controls="options" role="tab" data-toggle="tab">
-                    <i class="glyphicon glyphicon-cog"></i> {intl d='cawlpayment' l='Options'}
-                </a>
-            </li>
-            <li role="presentation">
-                <a href="#documentation" aria-controls="documentation" role="tab" data-toggle="tab">
-                    <i class="glyphicon glyphicon-book"></i> {intl d='cawlpayment' l='Documentation'}
-                </a>
-            </li>
-        </ul>
-    </div>
+    {* Main tabs *}
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active">
+            <a href="#tab-credentials" data-toggle="tab">
+                <i class="glyphicon glyphicon-lock"></i>
+                {intl d='cawlpayment' l='Credentials'}
+            </a>
+        </li>
+        <li role="presentation">
+            <a href="#tab-payment-methods" data-toggle="tab">
+                <i class="glyphicon glyphicon-list"></i>
+                {intl d='cawlpayment' l='Payment Methods'}
+            </a>
+        </li>
+        <li role="presentation">
+            <a href="#tab-options" data-toggle="tab">
+                <i class="glyphicon glyphicon-cog"></i>
+                {intl d='cawlpayment' l='Options'}
+            </a>
+        </li>
+        <li role="presentation">
+            <a href="#tab-documentation" data-toggle="tab">
+                <i class="glyphicon glyphicon-book"></i>
+                {intl d='cawlpayment' l='Documentation'}
+            </a>
+        </li>
+    </ul>
 
     {* Form *}
     <form action="{url path='/admin/cawlpayment/configure'}" method="post" id="cawl-config-form">
         <input type="hidden" name="cawlpayment_configuration[_token]" value="{$form_token}" id="csrf-token">
         <input type="hidden" name="cawlpayment_configuration[enabled_methods]" id="enabled-methods-input" value="{$config.enabled_methods|escape:'html'}">
 
-        <div class="tab-content">
-            {* Credentials Tab *}
-            <div role="tabpanel" class="tab-pane active" id="credentials">
+        <div class="tab-content" style="padding-top: 20px;">
+
+            {* ==================== CREDENTIALS TAB ==================== *}
+            <div role="tabpanel" class="tab-pane active" id="tab-credentials">
 
                 {* Merchant Information *}
-                <div class="cawl-config-section">
-                    <h4><i class="glyphicon glyphicon-user"></i> {intl d='cawlpayment' l='Merchant Information'}</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="pspid">{intl d='cawlpayment' l='PSPID (Merchant ID)'} *</label>
-                                <input type="text" class="form-control" id="pspid" name="cawlpayment_configuration[pspid]"
-                                       value="{$config.pspid|escape:'html'}" required>
-                                <p class="help-block">{intl d='cawlpayment' l='Your CAWL merchant identifier'}</p>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-user"></i>
+                            {intl d='cawlpayment' l='Merchant Information'}
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="pspid">
+                                        {intl d='cawlpayment' l='PSPID (Merchant ID)'}
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="pspid"
+                                           name="cawlpayment_configuration[pspid]"
+                                           value="{$config.pspid|escape:'html'}" required>
+                                    <p class="help-block">{intl d='cawlpayment' l='Your CAWL merchant identifier'}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {* Environment Selection - Elegant Switch *}
-                <div class="cawl-config-section">
-                    <h4><i class="glyphicon glyphicon-globe"></i> {intl d='cawlpayment' l='Environment & API Credentials'}</h4>
-
-                    <div class="env-switch">
-                        <span class="env-switch-label">{intl d='cawlpayment' l='Active Environment'}:</span>
-                        <div class="env-toggle">
-                            <input type="radio" name="cawlpayment_configuration[environment]" value="test" id="env-test"
-                                   {if !$is_production}checked{/if}>
-                            <label for="env-test">
-                                <i class="glyphicon glyphicon-flask"></i> {intl d='cawlpayment' l='Test'}
-                            </label>
-                            <input type="radio" name="cawlpayment_configuration[environment]" value="production" id="env-prod"
-                                   {if $is_production}checked{/if}>
-                            <label for="env-prod">
-                                <i class="glyphicon glyphicon-globe"></i> {intl d='cawlpayment' l='Production'}
-                            </label>
-                        </div>
+                {* Environment & API Credentials *}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-globe"></i>
+                            {intl d='cawlpayment' l='Environment & API Credentials'}
+                        </h3>
                     </div>
+                    <div class="panel-body">
 
-                    {* Credentials Panel with Tabs *}
-                    <div class="env-credentials-panel">
-                        <div class="env-credentials-tabs">
-                            <button type="button" class="env-tab test-tab {if !$is_production}active{/if}" data-env="test">
-                                <i class="glyphicon glyphicon-flask"></i>
-                                {intl d='cawlpayment' l='Test Credentials'}
-                                <span class="credentials-status {if $has_test_credentials}configured{else}not-configured{/if}">
-                                    {if $has_test_credentials}<i class="glyphicon glyphicon-ok"></i>{else}<i class="glyphicon glyphicon-remove"></i>{/if}
-                                </span>
-                            </button>
-                            <button type="button" class="env-tab prod-tab {if $is_production}active{/if}" data-env="prod">
-                                <i class="glyphicon glyphicon-globe"></i>
-                                {intl d='cawlpayment' l='Production Credentials'}
-                                <span class="credentials-status {if $has_prod_credentials}configured{else}not-configured{/if}">
-                                    {if $has_prod_credentials}<i class="glyphicon glyphicon-ok"></i>{else}<i class="glyphicon glyphicon-remove"></i>{/if}
-                                </span>
-                            </button>
+                        <div class="form-group">
+                            <label>{intl d='cawlpayment' l='Active Environment'}</label><br>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default{if !$is_production} active{/if}">
+                                    <input type="radio" name="cawlpayment_configuration[environment]"
+                                           value="test" {if !$is_production}checked{/if}>
+                                    <i class="glyphicon glyphicon-flask"></i>
+                                    {intl d='cawlpayment' l='Test'}
+                                </label>
+                                <label class="btn btn-default{if $is_production} active{/if}">
+                                    <input type="radio" name="cawlpayment_configuration[environment]"
+                                           value="production" {if $is_production}checked{/if}>
+                                    <i class="glyphicon glyphicon-globe"></i>
+                                    {intl d='cawlpayment' l='Production'}
+                                </label>
+                            </div>
                         </div>
 
-                        <div class="env-credentials-content">
-                            {* Test Environment Pane *}
-                            <div class="env-pane {if !$is_production}active{/if}" id="env-pane-test">
-                                <div class="env-links">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="{if !$is_production}active{/if}">
+                                <a href="#creds-test" data-toggle="tab">
+                                    <i class="glyphicon glyphicon-flask"></i>
+                                    {intl d='cawlpayment' l='Test Credentials'}
+                                    {if $has_test_credentials}
+                                        <i class="glyphicon glyphicon-ok text-success"></i>
+                                    {else}
+                                        <i class="glyphicon glyphicon-remove text-danger"></i>
+                                    {/if}
+                                </a>
+                            </li>
+                            <li role="presentation" class="{if $is_production}active{/if}">
+                                <a href="#creds-prod" data-toggle="tab">
+                                    <i class="glyphicon glyphicon-globe"></i>
+                                    {intl d='cawlpayment' l='Production Credentials'}
+                                    {if $has_prod_credentials}
+                                        <i class="glyphicon glyphicon-ok text-success"></i>
+                                    {else}
+                                        <i class="glyphicon glyphicon-remove text-danger"></i>
+                                    {/if}
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" style="padding-top: 15px;">
+
+                            {* Test credentials *}
+                            <div role="tabpanel" class="tab-pane{if !$is_production} active{/if}" id="creds-test">
+                                <p>
                                     <a href="https://portail.preprod.cawl-solutions.fr/" target="_blank" rel="noopener">
-                                        <i class="glyphicon glyphicon-new-window"></i> {intl d='cawlpayment' l='Open Test Merchant Portal'}
+                                        <i class="glyphicon glyphicon-new-window"></i>
+                                        {intl d='cawlpayment' l='Open Test Merchant Portal'}
                                     </a>
+                                    &nbsp;&nbsp;
                                     <a href="https://signup.preprod.cawl-solutions.fr/" target="_blank" rel="noopener">
-                                        <i class="glyphicon glyphicon-user"></i> {intl d='cawlpayment' l='Create Test Account'}
+                                        <i class="glyphicon glyphicon-user"></i>
+                                        {intl d='cawlpayment' l='Create Test Account'}
                                     </a>
-                                </div>
-                                <div class="credentials-grid">
-                                    <div class="form-group">
-                                        <label for="api_key_test">{intl d='cawlpayment' l='API Key'}</label>
-                                        <input type="password" class="form-control" id="api_key_test"
-                                               name="cawlpayment_configuration[api_key_test]"
-                                               placeholder="{if $has_test_credentials}••••••••{/if}">
+                                </p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="api_key_test">{intl d='cawlpayment' l='API Key'}</label>
+                                            <input type="password" class="form-control" id="api_key_test"
+                                                   name="cawlpayment_configuration[api_key_test]"
+                                                   placeholder="{if $has_test_credentials}••••••••{/if}">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="api_secret_test">{intl d='cawlpayment' l='API Secret'}</label>
-                                        <input type="password" class="form-control" id="api_secret_test"
-                                               name="cawlpayment_configuration[api_secret_test]"
-                                               placeholder="{if $has_test_credentials}••••••••{/if}">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="api_secret_test">{intl d='cawlpayment' l='API Secret'}</label>
+                                            <input type="password" class="form-control" id="api_secret_test"
+                                                   name="cawlpayment_configuration[api_secret_test]"
+                                                   placeholder="{if $has_test_credentials}••••••••{/if}">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="webhook-keys-section">
-                                    <h6><i class="glyphicon glyphicon-link"></i> {intl d='cawlpayment' l='Webhook Keys'}</h6>
-                                    <div class="credentials-grid">
+                                <p class="text-muted">
+                                    <i class="glyphicon glyphicon-link"></i>
+                                    {intl d='cawlpayment' l='Webhook Keys'}
+                                </p>
+                                <div class="row">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="webhook_key_test">{intl d='cawlpayment' l='Webhook Key'}</label>
                                             <input type="text" class="form-control" id="webhook_key_test"
                                                    name="cawlpayment_configuration[webhook_key_test]"
                                                    value="{$webhook_key_test|default:''}">
                                         </div>
+                                    </div>
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="webhook_secret_test">{intl d='cawlpayment' l='Webhook Secret'}</label>
                                             <input type="password" class="form-control" id="webhook_secret_test"
@@ -495,41 +210,123 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="panel panel-default" style="margin-top:16px">
+                                    <div class="panel-heading" style="cursor:pointer" data-toggle="collapse" data-target="#ngrok-help">
+                                        <strong><i class="glyphicon glyphicon-wrench"></i> {intl d='cawlpayment' l='Local testing with ngrok'}</strong>
+                                        <span class="pull-right text-muted" style="font-size:12px">{intl d='cawlpayment' l='click to expand'}</span>
+                                    </div>
+                                    <div id="ngrok-help" class="panel-collapse collapse">
+                                        <div class="panel-body" style="font-size:13px">
+                                            <p>{intl d='cawlpayment' l='In local development (DDEV), Worldline cannot reach'} <code>*.ddev.site</code> {intl d='cawlpayment' l='because it resolves to'} <code>127.0.0.1</code> {intl d='cawlpayment' l='on their servers. The return URL callback will never be called, which means the payment status will not be logged.'}</p>
+                                            <p><strong>{intl d='cawlpayment' l='Solution: expose DDEV via ngrok'}</strong></p>
+                                            <ol>
+                                                <li>{intl d='cawlpayment' l='Install ngrok:'} <code>sudo snap install ngrok</code></li>
+                                                <li>{intl d='cawlpayment' l='Create a free account on'} <a href="https://ngrok.com" target="_blank">ngrok.com</a> {intl d='cawlpayment' l='and add your authtoken to'} <code>.ddev/config.yaml</code> : <code>ngrok_args: --authtoken=&lt;token&gt;</code></li>
+                                                <li>{intl d='cawlpayment' l='Start the tunnel in a dedicated terminal (keep it running):'} <code>ddev share</code></li>
+                                                <li>{intl d='cawlpayment' l='Copy the public URL (e.g.'} <code>https://xxxx.ngrok-free.app</code>{intl d='cawlpayment' l=') and paste it in the field below.'}</li>
+                                                <li>{intl d='cawlpayment' l='Run'} <code>ddev exec php Thelia cawlpayment:test-transaction</code></li>
+                                            </ol>
+                                            <p class="text-muted">{intl d='cawlpayment' l='After payment, Worldline will redirect to the ngrok URL. The result (status, paymentId, isPaid) will appear in'} <code>var/log/log-thelia.txt</code> {intl d='cawlpayment' l='with the prefix'} <code>[CawlPayment][test-return]</code>.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="test_base_url">{intl d='cawlpayment' l='Test return URL base (ngrok / tunnel)'}</label>
+                                    <input type="text" class="form-control" id="test_base_url"
+                                           name="cawlpayment_configuration[test_base_url]"
+                                           value="{$config.test_base_url|default:''|escape:'html'}"
+                                           placeholder="https://xxxx.ngrok-free.app">
+                                    <p class="help-block">{intl d='cawlpayment' l='Leave empty to use the site URL. Set to an ngrok/tunnel URL for local testing so Worldline can reach the return URL.'}</p>
+                                </div>
+
+                                <hr style="margin:20px 0">
+
+                                {* Test transaction launcher *}
+                                <h4><i class="glyphicon glyphicon-play-circle"></i> {intl d='cawlpayment' l='Create a test transaction'}</h4>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="test-amount">{intl d='cawlpayment' l='Amount (€)'}</label>
+                                            <input type="number" class="form-control" id="test-amount" value="10.00" min="0.01" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="test-currency">{intl d='cawlpayment' l='Currency'}</label>
+                                            <input type="text" class="form-control" id="test-currency" value="EUR" maxlength="3">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label>&nbsp;</label>
+                                            <div>
+                                                <button type="button" class="btn btn-primary" id="btn-test-transaction">
+                                                    <i class="glyphicon glyphicon-play"></i> {intl d='cawlpayment' l='Create test transaction'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="test-transaction-result"></div>
+
+                                <hr style="margin:20px 0">
+
+                                {* Log viewer *}
+                                <h4>
+                                    <i class="glyphicon glyphicon-list-alt"></i> {intl d='cawlpayment' l='Module logs'}
+                                    <button type="button" class="btn btn-xs btn-default" id="btn-refresh-logs" style="margin-left:10px">
+                                        <i class="glyphicon glyphicon-refresh" id="refresh-logs-icon"></i> {intl d='cawlpayment' l='Refresh'}
+                                    </button>
+                                </h4>
+                                <p class="text-muted" style="font-size:13px">
+                                    {intl d='cawlpayment' l='Shows the last 50 lines from'} <code>var/log/log-thelia.txt</code> {intl d='cawlpayment' l='filtered on'} <code>[CawlPayment]</code>.
+                                    {intl d='cawlpayment' l='After a test payment, click Refresh and look for a'} <code style="color:#6a9955">[CawlPayment][test-return]</code> {intl d='cawlpayment' l='line.'}<br>
+                                    {intl d='cawlpayment' l='Key fields to check:'} <strong>isPaid</strong> {intl d='cawlpayment' l='(oui/non)'}, <strong>status</strong> {intl d='cawlpayment' l='(PAYMENT_CREATED, CANCELLED_BY_CONSUMER…)'}, <strong>statusCode</strong> {intl d='cawlpayment' l='(5 = authorised, 9 = captured, 0 = rejected)'}.
+                                </p>
+                                <pre id="cawl-log-output" style="background:#1e1e1e;color:#d4d4d4;max-height:300px;overflow-y:auto;font-size:11px;padding:10px;border-radius:4px">{intl d='cawlpayment' l='Loading...'}</pre>
+
                             </div>
 
-                            {* Production Environment Pane *}
-                            <div class="env-pane {if $is_production}active{/if}" id="env-pane-prod">
-                                <div class="env-links">
+                            {* Production credentials *}
+                            <div role="tabpanel" class="tab-pane{if $is_production} active{/if}" id="creds-prod">
+                                <p>
                                     <a href="https://portail.cawl-solutions.fr/" target="_blank" rel="noopener">
-                                        <i class="glyphicon glyphicon-new-window"></i> {intl d='cawlpayment' l='Open Production Merchant Portal'}
+                                        <i class="glyphicon glyphicon-new-window"></i>
+                                        {intl d='cawlpayment' l='Open Production Merchant Portal'}
                                     </a>
-                                    <span class="text-muted" style="font-size: 12px;">
-                                        <i class="glyphicon glyphicon-info-sign"></i> {intl d='cawlpayment' l='Contact CAWL to create a production account'}
-                                    </span>
-                                </div>
-                                <div class="credentials-grid">
-                                    <div class="form-group">
-                                        <label for="api_key_prod">{intl d='cawlpayment' l='API Key'}</label>
-                                        <input type="password" class="form-control" id="api_key_prod"
-                                               name="cawlpayment_configuration[api_key_prod]"
-                                               placeholder="{if $has_prod_credentials}••••••••{/if}">
+                                </p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="api_key_prod">{intl d='cawlpayment' l='API Key'}</label>
+                                            <input type="password" class="form-control" id="api_key_prod"
+                                                   name="cawlpayment_configuration[api_key_prod]"
+                                                   placeholder="{if $has_prod_credentials}••••••••{/if}">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="api_secret_prod">{intl d='cawlpayment' l='API Secret'}</label>
-                                        <input type="password" class="form-control" id="api_secret_prod"
-                                               name="cawlpayment_configuration[api_secret_prod]"
-                                               placeholder="{if $has_prod_credentials}••••••••{/if}">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="api_secret_prod">{intl d='cawlpayment' l='API Secret'}</label>
+                                            <input type="password" class="form-control" id="api_secret_prod"
+                                                   name="cawlpayment_configuration[api_secret_prod]"
+                                                   placeholder="{if $has_prod_credentials}••••••••{/if}">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="webhook-keys-section">
-                                    <h6><i class="glyphicon glyphicon-link"></i> {intl d='cawlpayment' l='Webhook Keys'}</h6>
-                                    <div class="credentials-grid">
+                                <p class="text-muted">
+                                    <i class="glyphicon glyphicon-link"></i>
+                                    {intl d='cawlpayment' l='Webhook Keys'}
+                                </p>
+                                <div class="row">
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="webhook_key_prod">{intl d='cawlpayment' l='Webhook Key'}</label>
                                             <input type="text" class="form-control" id="webhook_key_prod"
                                                    name="cawlpayment_configuration[webhook_key_prod]"
                                                    value="{$webhook_key_prod|default:''}">
                                         </div>
+                                    </div>
+                                    <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="webhook_secret_prod">{intl d='cawlpayment' l='Webhook Secret'}</label>
                                             <input type="password" class="form-control" id="webhook_secret_prod"
@@ -539,332 +336,379 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
+
+                        </div>{* /tab-content credentials *}
+                    </div>{* /panel-body *}
+                </div>{* /panel env *}
 
                 {* Webhook URL *}
-                <div class="cawl-config-section">
-                    <h4><i class="glyphicon glyphicon-link"></i> {intl d='cawlpayment' l='Webhook URL'}</h4>
-                    <p class="text-muted">{intl d='cawlpayment' l='Copy this URL to your CAWL dashboard for payment notifications:'}</p>
-                    <div class="webhook-url" id="webhook-url">{$webhook_url}</div>
-                    <button type="button" class="btn btn-sm btn-default" style="margin-top: 10px;" onclick="copyWebhookUrl()">
-                        <i class="glyphicon glyphicon-copy"></i> {intl d='cawlpayment' l='Copy'}
-                    </button>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-link"></i>
+                            {intl d='cawlpayment' l='Webhook URL'}
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <p class="text-muted">
+                            {intl d='cawlpayment' l='Copy this URL to your CAWL dashboard for payment notifications:'}
+                        </p>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="webhook-url" value="{$webhook_url}" readonly>
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" onclick="copyWebhookUrl()">
+                                    <i class="glyphicon glyphicon-copy"></i>
+                                    {intl d='cawlpayment' l='Copy'}
+                                </button>
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
-            </div>
+            </div>{* /tab-credentials *}
 
-            {* Payment Methods Tab *}
-            <div role="tabpanel" class="tab-pane" id="payment-methods">
-                <div class="cawl-config-section">
-                    <h4><i class="glyphicon glyphicon-check"></i> {intl d='cawlpayment' l='Enable Payment Methods'}</h4>
-                    <p class="text-muted">{intl d='cawlpayment' l='Select the payment methods you want to offer to your customers. Each method will appear as a separate option at checkout.'}</p>
+            {* ==================== PAYMENT METHODS TAB ==================== *}
+            <div role="tabpanel" class="tab-pane" id="tab-payment-methods">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-check"></i>
+                            {intl d='cawlpayment' l='Enable Payment Methods'}
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <p class="text-muted">
+                            {intl d='cawlpayment' l='Select the payment methods you want to offer to your customers.'}
+                        </p>
 
-                    {* Message if API credentials are not configured *}
-                    <div id="payment-methods-not-configured" class="alert alert-info" style="display: none;">
-                        <i class="glyphicon glyphicon-info-sign"></i>
-                        <strong>{intl d='cawlpayment' l='API credentials required'}</strong><br>
-                        <span id="payment-methods-not-configured-text">{intl d='cawlpayment' l='Please configure your API credentials in the "Credentials" tab first to load available payment methods.'}</span>
-                        <div style="margin-top: 10px;">
-                            <a href="#credentials" class="btn btn-primary btn-sm" data-toggle="tab" onclick="$('.nav-tabs a[href=\'#credentials\']').tab('show');">
-                                <i class="glyphicon glyphicon-cog"></i> {intl d='cawlpayment' l='Configure credentials'}
+                        <div id="payment-methods-not-configured" class="alert alert-info" style="display: none;">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            <strong>{intl d='cawlpayment' l='API credentials required'}</strong><br>
+                            <span id="payment-methods-not-configured-text">
+                                {intl d='cawlpayment' l='Please configure your API credentials in the "Credentials" tab first.'}
+                            </span>
+                            <div style="margin-top: 10px;">
+                                <a href="#tab-credentials" class="btn btn-primary btn-sm" data-toggle="tab">
+                                    <i class="glyphicon glyphicon-cog"></i>
+                                    {intl d='cawlpayment' l='Configure credentials'}
+                                </a>
+                            </div>
+                        </div>
+
+                        <div id="payment-methods-loading" class="text-center" style="padding: 40px; display: none;">
+                            <i class="glyphicon glyphicon-refresh glyphicon-spin"></i>
+                            {intl d='cawlpayment' l='Loading payment methods from API...'}
+                        </div>
+
+                        <div id="payment-methods-error" class="alert alert-warning" style="display: none;">
+                            <i class="glyphicon glyphicon-warning-sign"></i>
+                            <span id="payment-methods-error-text"></span>
+                            <button type="button" class="btn btn-sm btn-default" onclick="loadPaymentProducts()" style="margin-left: 10px;">
+                                <i class="glyphicon glyphicon-refresh"></i>
+                                {intl d='cawlpayment' l='Retry'}
+                            </button>
+                        </div>
+
+                        <div id="payment-methods-container" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>{* /tab-payment-methods *}
+
+            {* ==================== OPTIONS TAB ==================== *}
+            <div role="tabpanel" class="tab-pane" id="tab-options">
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-wrench"></i>
+                            {intl d='cawlpayment' l='General Options'}
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="cawlpayment_configuration[enable_logging]"
+                                           value="1" {if $config.enable_logging}checked{/if}>
+                                    {intl d='cawlpayment' l='Enable detailed logging'}
+                                </label>
+                                <p class="help-block">
+                                    {intl d='cawlpayment' l='Log all API requests and responses for debugging'}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="checkout_description">
+                                {intl d='cawlpayment' l='Checkout description'}
+                            </label>
+                            <input type="text" class="form-control" id="checkout_description"
+                                   name="cawlpayment_configuration[checkout_description]"
+                                   value="{$config.checkout_description|escape:'html'}">
+                            <p class="help-block">
+                                {intl d='cawlpayment' l='Custom text displayed at checkout'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-euro"></i>
+                            {intl d='cawlpayment' l='Amount Limits'}
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="min_amount">{intl d='cawlpayment' l='Minimum amount'}</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="min_amount"
+                                               name="cawlpayment_configuration[min_amount]"
+                                               value="{$config.min_amount}" step="0.01" min="0">
+                                        <span class="input-group-addon">EUR</span>
+                                    </div>
+                                    <p class="help-block">{intl d='cawlpayment' l='0 = no minimum'}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="max_amount">{intl d='cawlpayment' l='Maximum amount'}</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="max_amount"
+                                               name="cawlpayment_configuration[max_amount]"
+                                               value="{$config.max_amount}" step="0.01" min="0">
+                                        <span class="input-group-addon">EUR</span>
+                                    </div>
+                                    <p class="help-block">{intl d='cawlpayment' l='0 = no maximum'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-lock"></i>
+                            {intl d='cawlpayment' l='Webhook Security'}
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <p class="text-muted">
+                            {intl d='cawlpayment' l='Configure IP restrictions for webhook access to enhance security.'}
+                        </p>
+                        <div class="form-group">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"
+                                           name="cawlpayment_configuration[webhook_whitelist_enabled]"
+                                           id="webhook_whitelist_enabled" value="1"
+                                           {if $config.webhook_whitelist_enabled == '1'}checked{/if}>
+                                    {intl d='cawlpayment' l='Enable IP whitelist for webhooks'}
+                                </label>
+                                <p class="help-block">
+                                    {intl d='cawlpayment' l='When disabled in test mode, all IPs are allowed. In production mode, the whitelist is always enforced if IPs are configured.'}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="webhook_ip_whitelist">
+                                {intl d='cawlpayment' l='Webhook IP Whitelist'}
+                            </label>
+                            <textarea class="form-control"
+                                      name="cawlpayment_configuration[webhook_ip_whitelist]"
+                                      id="webhook_ip_whitelist" rows="3"
+                                      placeholder="192.168.1.1, 10.0.0.0/8, 172.16.0.0/12">{$config.webhook_ip_whitelist|escape:'html'}</textarea>
+                            <p class="help-block">
+                                {intl d='cawlpayment' l='Comma-separated list of allowed IPs or CIDR ranges (IPv4 only).'}
+                            </p>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            <strong>{intl d='cawlpayment' l='CAWL/Worldline IP Ranges:'}</strong>
+                            {intl d='cawlpayment' l='Contact CAWL support to obtain the official IP ranges for webhook notifications.'}
+                        </div>
+                    </div>
+                </div>
+
+            </div>{* /tab-options *}
+
+            {* ==================== DOCUMENTATION TAB ==================== *}
+            <div role="tabpanel" class="tab-pane" id="tab-documentation">
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-link"></i>
+                            {intl d='cawlpayment' l='External Resources'}
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <p>
+                            <a href="https://docs.ecommerce.cawl-solutions.fr/en/integration/how-to-integrate/server-sdks/php"
+                               target="_blank" rel="noopener" class="btn btn-default btn-sm">
+                                <i class="glyphicon glyphicon-file"></i>
+                                {intl d='cawlpayment' l='PHP SDK Documentation'}
                             </a>
-                        </div>
-                    </div>
-
-                    <div id="payment-methods-loading" class="text-center" style="padding: 40px; display: none;">
-                        <i class="glyphicon glyphicon-refresh glyphicon-spin"></i> {intl d='cawlpayment' l='Loading payment methods from API...'}
-                    </div>
-
-                    <div id="payment-methods-error" class="alert alert-warning" style="display: none;">
-                        <i class="glyphicon glyphicon-warning-sign"></i>
-                        <span id="payment-methods-error-text"></span>
-                        <button type="button" class="btn btn-sm btn-default" onclick="loadPaymentProducts()" style="margin-left: 10px;">
-                            <i class="glyphicon glyphicon-refresh"></i> {intl d='cawlpayment' l='Retry'}
-                        </button>
-                    </div>
-
-                    <div id="payment-methods-container" style="display: none;">
-                        {* Dynamically filled by JavaScript *}
-                    </div>
-                </div>
-            </div>
-
-            {* Options Tab *}
-            <div role="tabpanel" class="tab-pane" id="options">
-                <div class="cawl-config-section">
-                    <h4><i class="glyphicon glyphicon-wrench"></i> {intl d='cawlpayment' l='General Options'}</h4>
-
-                    <div class="form-group">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="cawlpayment_configuration[enable_logging]" value="1"
-                                       {if $config.enable_logging}checked{/if}>
-                                {intl d='cawlpayment' l='Enable detailed logging'}
-                            </label>
-                            <p class="help-block">{intl d='cawlpayment' l='Log all API requests and responses for debugging'}</p>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="checkout_description">{intl d='cawlpayment' l='Checkout description'}</label>
-                        <input type="text" class="form-control" id="checkout_description"
-                               name="cawlpayment_configuration[checkout_description]"
-                               value="{$config.checkout_description|escape:'html'}">
-                        <p class="help-block">{intl d='cawlpayment' l='Custom text displayed at checkout'}</p>
+                            <a href="https://docs.ecommerce.cawl-solutions.fr/en/integration/how-to-integrate"
+                               target="_blank" rel="noopener" class="btn btn-default btn-sm">
+                                <i class="glyphicon glyphicon-cog"></i>
+                                {intl d='cawlpayment' l='Integration Guide'}
+                            </a>
+                            <a href="https://docs.ecommerce.cawl-solutions.fr/"
+                               target="_blank" rel="noopener" class="btn btn-default btn-sm">
+                                <i class="glyphicon glyphicon-home"></i>
+                                {intl d='cawlpayment' l='CAWL Documentation Portal'}
+                            </a>
+                        </p>
                     </div>
                 </div>
 
-                <div class="cawl-config-section">
-                    <h4><i class="glyphicon glyphicon-euro"></i> {intl d='cawlpayment' l='Amount Limits'}</h4>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-credit-card"></i>
+                            {intl d='cawlpayment' l='Test Cards'}
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <p class="text-muted">
+                            {intl d='cawlpayment' l='Use these test card numbers in the test environment to simulate different payment scenarios.'}
+                        </p>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="min_amount">{intl d='cawlpayment' l='Minimum amount'}</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" id="min_amount"
-                                           name="cawlpayment_configuration[min_amount]"
-                                           value="{$config.min_amount}" step="0.01" min="0">
-                                    <span class="input-group-addon">EUR</span>
-                                </div>
-                                <p class="help-block">{intl d='cawlpayment' l='0 = no minimum'}</p>
+                        <div class="panel panel-success">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <i class="glyphicon glyphicon-ok"></i>
+                                    {intl d='cawlpayment' l='Successful Payment'} (3DS Frictionless)
+                                </h4>
+                            </div>
+                            <div class="panel-body">
+                                <table class="table table-condensed table-bordered" style="margin-bottom: 0;">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Visa</strong></td>
+                                            <td><code>4330 2649 3634 4675</code></td>
+                                            <td>{intl d='cawlpayment' l='Any future date'}</td>
+                                            <td>CVV: <code>123</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Mastercard</strong></td>
+                                            <td><code>5137 0098 0194 3438</code></td>
+                                            <td>{intl d='cawlpayment' l='Any future date'}</td>
+                                            <td>CVV: <code>123</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>American Express</strong></td>
+                                            <td><code>3714 4963 5311 004</code></td>
+                                            <td>{intl d='cawlpayment' l='Any future date'}</td>
+                                            <td>CVV: <code>1234</code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="max_amount">{intl d='cawlpayment' l='Maximum amount'}</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" id="max_amount"
-                                           name="cawlpayment_configuration[max_amount]"
-                                           value="{$config.max_amount}" step="0.01" min="0">
-                                    <span class="input-group-addon">EUR</span>
-                                </div>
-                                <p class="help-block">{intl d='cawlpayment' l='0 = no maximum'}</p>
+
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <i class="glyphicon glyphicon-lock"></i>
+                                    {intl d='cawlpayment' l='3D Secure Challenge'}
+                                </h4>
+                            </div>
+                            <div class="panel-body">
+                                <table class="table table-condensed table-bordered" style="margin-bottom: 0;">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Visa 3DS</strong></td>
+                                            <td><code>4874 9706 8667 2022</code></td>
+                                            <td>{intl d='cawlpayment' l='Any future date'}</td>
+                                            <td>CVV: <code>123</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Mastercard 3DS</strong></td>
+                                            <td><code>5130 2574 7453 3310</code></td>
+                                            <td>{intl d='cawlpayment' l='Any future date'}</td>
+                                            <td>CVV: <code>123</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Amex 3DS</strong></td>
+                                            <td><code>3799 4330 5931 143</code></td>
+                                            <td>{intl d='cawlpayment' l='Any future date'}</td>
+                                            <td>CVV: <code>1234</code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
+
+                        <div class="panel panel-danger">
+                            <div class="panel-heading">
+                                <h4 class="panel-title">
+                                    <i class="glyphicon glyphicon-remove"></i>
+                                    {intl d='cawlpayment' l='Declined Payment'}
+                                </h4>
+                            </div>
+                            <div class="panel-body">
+                                <table class="table table-condensed table-bordered" style="margin-bottom: 0;">
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Visa {intl d='cawlpayment' l='Declined'}</strong></td>
+                                            <td><code>4450 0222 3797 3103</code></td>
+                                            <td>{intl d='cawlpayment' l='Any future date'}</td>
+                                            <td>CVV: <code>123</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Mastercard {intl d='cawlpayment' l='Declined'}</strong></td>
+                                            <td><code>5168 6453 0579 0452</code></td>
+                                            <td>{intl d='cawlpayment' l='Any future date'}</td>
+                                            <td>CVV: <code>123</code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="glyphicon glyphicon-info-sign"></i>
+                            <strong>{intl d='cawlpayment' l='Important:'}</strong>
+                            {intl d='cawlpayment' l='These cards only work in test mode. Make sure your environment is set to "Test" before using them.'}
+                        </div>
                     </div>
                 </div>
 
-                {* Webhook Security Section *}
-                <div class="cawl-config-section">
-                    <h4><i class="glyphicon glyphicon-lock"></i> {intl d='cawlpayment' l='Webhook Security'}</h4>
-                    <p class="text-muted">{intl d='cawlpayment' l='Configure IP restrictions for webhook access to enhance security.'}</p>
+            </div>{* /tab-documentation *}
 
-                    <div class="form-group">
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="cawlpayment_configuration[webhook_whitelist_enabled]"
-                                       id="webhook_whitelist_enabled" value="1"
-                                       {if $config.webhook_whitelist_enabled == '1'}checked{/if}>
-                                {intl d='cawlpayment' l='Enable IP whitelist for webhooks'}
-                            </label>
-                            <p class="help-block">{intl d='cawlpayment' l='When disabled in test mode, all IPs are allowed. In production mode, the whitelist is always enforced if IPs are configured.'}</p>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="webhook_ip_whitelist">{intl d='cawlpayment' l='Webhook IP Whitelist'}</label>
-                        <textarea class="form-control" name="cawlpayment_configuration[webhook_ip_whitelist]"
-                                  id="webhook_ip_whitelist" rows="3"
-                                  placeholder="192.168.1.1, 10.0.0.0/8, 172.16.0.0/12">{$config.webhook_ip_whitelist|escape:'html'}</textarea>
-                        <p class="help-block">{intl d='cawlpayment' l='Comma-separated list of allowed IPs or CIDR ranges (IPv4 only). Leave empty and disable whitelist to allow all IPs in test mode.'}</p>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <i class="glyphicon glyphicon-info-sign"></i>
-                        <strong>{intl d='cawlpayment' l='CAWL/Worldline IP Ranges:'}</strong>
-                        {intl d='cawlpayment' l='Contact CAWL support to obtain the official IP ranges for webhook notifications. These IPs should be whitelisted for production use.'}
-                    </div>
-                </div>
-            </div>
-
-            {* Documentation Tab *}
-            <div role="tabpanel" class="tab-pane" id="documentation">
-                {* External Documentation Links *}
-                <div class="cawl-config-section">
-                    <h4><i class="glyphicon glyphicon-link"></i> {intl d='cawlpayment' l='External Resources'}</h4>
-                    <p class="text-muted">{intl d='cawlpayment' l='Useful resources to help you configure and integrate CAWL Payment:'}</p>
-                    <div class="doc-links">
-                        <a href="https://docs.ecommerce.cawl-solutions.fr/en/integration/how-to-integrate/server-sdks/php" target="_blank" rel="noopener" class="doc-link">
-                            <i class="glyphicon glyphicon-file"></i> {intl d='cawlpayment' l='PHP SDK Documentation'}
-                        </a>
-                        <a href="https://docs.ecommerce.cawl-solutions.fr/en/integration/how-to-integrate" target="_blank" rel="noopener" class="doc-link">
-                            <i class="glyphicon glyphicon-cog"></i> {intl d='cawlpayment' l='Integration Guide'}
-                        </a>
-                        <a href="https://docs.ecommerce.cawl-solutions.fr/" target="_blank" rel="noopener" class="doc-link">
-                            <i class="glyphicon glyphicon-home"></i> {intl d='cawlpayment' l='CAWL Documentation Portal'}
-                        </a>
-                    </div>
-                </div>
-
-                {* Test Cards Section *}
-                <div class="cawl-config-section">
-                    <h4><i class="glyphicon glyphicon-credit-card"></i> {intl d='cawlpayment' l='Test Cards'}</h4>
-                    <p class="text-muted">{intl d='cawlpayment' l='Use these test card numbers in the test environment to simulate different payment scenarios.'}</p>
-
-                    <div class="panel panel-success">
-                        <div class="panel-heading">
-                            <h5 class="panel-title"><i class="glyphicon glyphicon-ok"></i> {intl d='cawlpayment' l='Successful Payment'} (3DS Frictionless)</h5>
-                        </div>
-                        <div class="panel-body">
-                            <table class="table table-condensed" style="margin-bottom: 0;">
-                                <tbody>
-                                    <tr>
-                                        <td><strong>Visa</strong></td>
-                                        <td><code>4330 2649 3634 4675</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>123</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Mastercard</strong></td>
-                                        <td><code>5137 0098 0194 3438</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>123</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>American Express</strong></td>
-                                        <td><code>3714 4963 5311 004</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>1234</code></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <p class="help-block" style="margin-top: 10px; margin-bottom: 0;">
-                                <i class="glyphicon glyphicon-info-sign"></i>
-                                {intl d='cawlpayment' l='These cards pass 3D Secure automatically without user interaction (frictionless).'}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="panel panel-info">
-                        <div class="panel-heading">
-                            <h5 class="panel-title"><i class="glyphicon glyphicon-lock"></i> {intl d='cawlpayment' l='3D Secure Challenge'}</h5>
-                        </div>
-                        <div class="panel-body">
-                            <table class="table table-condensed" style="margin-bottom: 0;">
-                                <tbody>
-                                    <tr>
-                                        <td><strong>Visa 3DS</strong></td>
-                                        <td><code>4874 9706 8667 2022</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>123</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Mastercard 3DS</strong></td>
-                                        <td><code>5130 2574 7453 3310</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>123</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Amex 3DS</strong></td>
-                                        <td><code>3799 4330 5931 143</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>1234</code></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <p class="help-block" style="margin-top: 10px; margin-bottom: 0;">
-                                <i class="glyphicon glyphicon-info-sign"></i>
-                                {intl d='cawlpayment' l='These cards require 3D Secure authentication (challenge flow). Complete the authentication to approve.'}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="panel panel-danger">
-                        <div class="panel-heading">
-                            <h5 class="panel-title"><i class="glyphicon glyphicon-remove"></i> {intl d='cawlpayment' l='Declined Payment'}</h5>
-                        </div>
-                        <div class="panel-body">
-                            <table class="table table-condensed" style="margin-bottom: 0;">
-                                <tbody>
-                                    <tr>
-                                        <td><strong>Visa {intl d='cawlpayment' l='Declined'}</strong></td>
-                                        <td><code>4450 0222 3797 3103</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>123</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Mastercard {intl d='cawlpayment' l='Declined'}</strong></td>
-                                        <td><code>5168 6453 0579 0452</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>123</code></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h5 class="panel-title"><i class="glyphicon glyphicon-th-list"></i> {intl d='cawlpayment' l='Other Payment Methods'}</h5>
-                        </div>
-                        <div class="panel-body">
-                            <table class="table table-condensed" style="margin-bottom: 0;">
-                                <tbody>
-                                    <tr>
-                                        <td><strong>Maestro</strong></td>
-                                        <td><code>5020 8023 5280 8673</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>123</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Discover</strong></td>
-                                        <td><code>6011 4921 0000 5191</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>123</code></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>JCB</strong></td>
-                                        <td><code>3528 7980 6201 4879</code></td>
-                                        <td>{intl d='cawlpayment' l='Any future date'}</td>
-                                        <td>CVV: <code>123</code></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="alert alert-info">
-                        <i class="glyphicon glyphicon-info-sign"></i>
-                        <strong>{intl d='cawlpayment' l='Important:'}</strong>
-                        {intl d='cawlpayment' l='These cards only work in test mode. Make sure your environment is set to "Test" before using them.'}
-                    </div>
-                </div>
-            </div>
-        </div>
+        </div>{* /tab-content *}
 
         {* Save Button *}
-        <div class="row" style="margin-top: 20px;">
-            <div class="col-md-12">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="glyphicon glyphicon-floppy-disk"></i> {intl d='cawlpayment' l='Save Configuration'}
-                </button>
-            </div>
+        <div class="form-group" style="margin-top: 20px;">
+            <button type="submit" class="btn btn-primary">
+                <i class="glyphicon glyphicon-floppy-disk"></i>
+                {intl d='cawlpayment' l='Save Configuration'}
+            </button>
         </div>
+
     </form>
-</div>
+
+</div>{* /general-block-decorator *}
 
 <script type="text/javascript">
 (function() {
-    // Payment products loaded from API
     var paymentProducts = [];
     var enabledMethodsStored = '{$config.enabled_methods|escape:javascript}';
-
-    // Check if API credentials are configured based on current environment
     var currentEnvironment = '{$config.environment|default:"test"}';
     var pspidConfigured = '{if $config.pspid}true{else}false{/if}' === 'true';
     var apiKeyTestConfigured = '{if $config.api_key_test}true{else}false{/if}' === 'true';
     var apiKeyProdConfigured = '{if $config.api_key_prod}true{else}false{/if}' === 'true';
 
-    // Check credentials based on environment
     var credentialsConfigured = pspidConfigured && (
         (currentEnvironment === 'test' && apiKeyTestConfigured) ||
         (currentEnvironment === 'production' && apiKeyProdConfigured)
     );
 
-    // Determine which credentials are missing for the message
     var missingCredentialsMessage = '';
     if (!pspidConfigured) {
         missingCredentialsMessage = '{intl d="cawlpayment" l="PSPID is required." js=1}';
@@ -874,7 +718,6 @@
         missingCredentialsMessage = '{intl d="cawlpayment" l="Production API credentials are required for Production mode." js=1}';
     }
 
-    // Load payment products from API
     window.loadPaymentProducts = function() {
         var notConfigured = document.getElementById('payment-methods-not-configured');
         var notConfiguredText = document.getElementById('payment-methods-not-configured-text');
@@ -882,7 +725,6 @@
         var error = document.getElementById('payment-methods-error');
         var container = document.getElementById('payment-methods-container');
 
-        // Check if credentials are configured
         if (!credentialsConfigured) {
             if (notConfiguredText && missingCredentialsMessage) {
                 notConfiguredText.textContent = missingCredentialsMessage;
@@ -903,13 +745,10 @@
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 loading.style.display = 'none';
-
                 if (data.success && data.products && data.products.length > 0) {
                     paymentProducts = data.products;
                     renderPaymentProducts(data.products);
                     container.style.display = 'block';
-
-                    // Re-init checkboxes after render
                     if (typeof jQuery !== 'undefined') {
                         initCheckboxesFromValueDynamic(jQuery);
                         bindPaymentMethodEvents(jQuery);
@@ -928,11 +767,8 @@
             });
     };
 
-    // Render payment products grouped by payment method
     function renderPaymentProducts(products) {
         var container = document.getElementById('payment-methods-container');
-
-        // Group by paymentMethod
         var groups = {};
         var groupLabels = {
             'card': '{intl d="cawlpayment" l="Credit Cards" js=1}',
@@ -941,7 +777,6 @@
             'cash': '{intl d="cawlpayment" l="Local Methods" js=1}',
             'other': '{intl d="cawlpayment" l="Other Payment Methods" js=1}'
         };
-
         var groupIcons = {
             'card': 'glyphicon-credit-card',
             'redirect': 'glyphicon-transfer',
@@ -952,296 +787,226 @@
 
         products.forEach(function(product) {
             var group = product.paymentMethod || 'other';
-            if (!groups[group]) {
-                groups[group] = [];
-            }
+            if (!groups[group]) groups[group] = [];
             groups[group].push(product);
         });
 
         var html = '';
-        var groupOrder = ['card', 'redirect', 'mobile', 'cash', 'other'];
-
-        groupOrder.forEach(function(groupKey) {
+        ['card', 'redirect', 'mobile', 'cash', 'other'].forEach(function(groupKey) {
             if (!groups[groupKey] || groups[groupKey].length === 0) return;
-
-            var groupProducts = groups[groupKey];
             var label = groupLabels[groupKey] || groupKey;
             var icon = groupIcons[groupKey] || 'glyphicon-th-list';
-
-            html += '<div class="category-section">';
-            html += '<h5><i class="glyphicon ' + icon + '"></i> ' + label + ' <span class="badge">' + groupProducts.length + '</span></h5>';
-            html += '<div class="payment-methods-grid">';
-
-            groupProducts.forEach(function(product) {
+            html += '<h5><i class="glyphicon ' + icon + '"></i> ' + label + ' <span class="badge">' + groups[groupKey].length + '</span></h5>';
+            html += '<div class="row">';
+            groups[groupKey].forEach(function(product) {
                 var productCode = 'product_' + product.id;
                 var productLabel = product.displayHints.label || 'Product ' + product.id;
                 var logoUrl = product.displayHints.logo || '';
-
-                html += '<div class="payment-method-item" data-method="' + productCode + '" data-product-id="' + product.id + '">';
-                html += '<input type="checkbox" class="method-checkbox" data-method="' + productCode + '">';
-                html += '<span class="method-logo">';
+                html += '<div class="col-xs-6 col-sm-4 col-md-3" style="margin-bottom: 8px;">';
+                html += '<div class="panel panel-default payment-method-item" data-method="' + productCode + '" style="cursor:pointer; margin-bottom:0;">';
+                html += '<div class="panel-body" style="padding: 8px; display:flex; align-items:center;">';
+                html += '<input type="checkbox" class="method-checkbox" data-method="' + productCode + '" style="margin-right:8px;">';
                 if (logoUrl) {
-                    html += '<img src="' + logoUrl + '" alt="' + productLabel + '" style="max-width: 48px; max-height: 32px; object-fit: contain;">';
-                } else {
-                    html += '<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#f5f5f5" stroke="#ddd"/><text x="24" y="18" font-family="Arial" font-size="6" fill="#999" text-anchor="middle">' + product.id + '</text></svg>';
+                    html += '<img src="' + logoUrl + '" alt="' + productLabel + '" style="max-width: 40px; max-height: 28px; object-fit: contain; margin-right: 8px;">';
                 }
-                html += '</span>';
-                html += '<span class="method-name">' + productLabel + '</span>';
-                html += '</div>';
+                html += '<small>' + productLabel + '</small>';
+                html += '</div></div></div>';
             });
-
-            html += '</div></div>';
+            html += '</div><hr>';
         });
 
         container.innerHTML = html;
     }
 
-    // Initialize checkboxes from stored value (dynamic version)
     function initCheckboxesFromValueDynamic($) {
         if (!enabledMethodsStored) return;
-
-        var enabledMethods = enabledMethodsStored.split(',');
-        enabledMethods.forEach(function(method) {
+        enabledMethodsStored.split(',').forEach(function(method) {
             method = method.trim();
             if (method) {
                 var checkbox = $('.method-checkbox[data-method="' + method + '"]');
                 if (checkbox.length) {
                     checkbox.prop('checked', true);
-                    checkbox.closest('.payment-method-item').addClass('enabled');
+                    checkbox.closest('.payment-method-item').addClass('panel-primary').removeClass('panel-default');
                 }
             }
         });
     }
 
-    // Global function to collect enabled methods (accessible from bindPaymentMethodEvents)
     function updateEnabledMethods() {
         if (typeof jQuery === 'undefined') return;
         var $ = jQuery;
         var enabled = [];
-        $('#cawl-config-form .method-checkbox').each(function() {
-            if ($(this).is(':checked') || $(this).prop('checked')) {
-                var method = $(this).attr('data-method') || $(this).data('method');
-                if (method) {
-                    enabled.push(method);
-                }
-            }
+        $('#cawl-config-form .method-checkbox:checked').each(function() {
+            var method = $(this).attr('data-method');
+            if (method) enabled.push(method);
         });
-        var value = enabled.join(',');
-        $('#enabled-methods-input').val(value);
+        $('#enabled-methods-input').val(enabled.join(','));
     }
 
-    // Bind events for dynamically loaded payment methods
     function bindPaymentMethodEvents($) {
-        // Payment methods toggle - clicking on the card
         $(document).off('click', '.payment-method-item').on('click', '.payment-method-item', function(e) {
             if ($(e.target).is('input[type="checkbox"]')) return;
             var checkbox = $(this).find('.method-checkbox');
             checkbox.prop('checked', !checkbox.prop('checked'));
-            $(this).toggleClass('enabled', checkbox.prop('checked'));
+            $(this).toggleClass('panel-primary', checkbox.prop('checked')).toggleClass('panel-default', !checkbox.prop('checked'));
             updateEnabledMethods();
         });
-
-        // Payment methods toggle - clicking on checkbox
         $(document).off('change', '.method-checkbox').on('change', '.method-checkbox', function() {
-            $(this).closest('.payment-method-item').toggleClass('enabled', $(this).prop('checked'));
+            var checked = $(this).prop('checked');
+            $(this).closest('.payment-method-item').toggleClass('panel-primary', checked).toggleClass('panel-default', !checked);
             updateEnabledMethods();
         });
     }
 
-    function initCawlConfig($) {
-        // Initialize checkboxes from stored value (for static methods - kept for fallback)
-        function initCheckboxesFromValue() {
-            var storedValue = $('#enabled-methods-input').val();
-            if (storedValue) {
-                var enabledMethods = storedValue.split(',');
-                enabledMethods.forEach(function(method) {
-                    method = method.trim();
-                    if (method) {
-                        var checkbox = $('.method-checkbox[data-method="' + method + '"]');
-                        if (checkbox.length) {
-                            checkbox.prop('checked', true);
-                            checkbox.closest('.payment-method-item').addClass('enabled');
-                        }
-                    }
-                });
-            }
-        }
-
-        // Payment methods toggle - clicking on the card
-        $('.payment-method-item').on('click', function(e) {
-            if ($(e.target).is('input[type="checkbox"]')) return;
-            var checkbox = $(this).find('.method-checkbox');
-            checkbox.prop('checked', !checkbox.prop('checked'));
-            $(this).toggleClass('enabled', checkbox.prop('checked'));
-            updateEnabledMethods();
-        });
-
-        // Payment methods toggle - clicking on checkbox
-        $('.method-checkbox').on('change', function() {
-            $(this).closest('.payment-method-item').toggleClass('enabled', $(this).prop('checked'));
-            updateEnabledMethods();
-        });
-
-        // Environment credentials tabs
-        $('.env-credentials-tabs .env-tab').on('click', function() {
-            var env = $(this).data('env');
-            $('.env-credentials-tabs .env-tab').removeClass('active');
-            $(this).addClass('active');
-            $('.env-credentials-content .env-pane').removeClass('active');
-            $('#env-pane-' + env).addClass('active');
-        });
-
-        // Sync environment toggle with credentials tabs
-        $('input[name="cawlpayment_configuration[environment]"]').on('change', function() {
-            var env = $(this).val() === 'production' ? 'prod' : 'test';
-            $('.env-credentials-tabs .env-tab[data-env="' + env + '"]').click();
-        });
-
-        // Form submission
-        $('#cawl-config-form').on('submit', function(e) {
-            updateEnabledMethods();
-            return true;
-        });
-
-        // Test connection
-        $('#btn-test-connection').on('click', function() {
-            var btn = $(this);
-            var result = $('#test-result');
-
-            btn.prop('disabled', true).html('<i class="glyphicon glyphicon-refresh glyphicon-spin"></i> {intl d="cawlpayment" l="Testing..." js=1}');
-            result.html('').removeClass('success error');
-
-            $.ajax({
-                url: '/admin/module/CawlPayment/test-connection',
-                method: 'POST',
-                data: { _token: $('#csrf-token').val() },
-                success: function(response) {
-                    if (response.success) {
-                        result.html('<i class="glyphicon glyphicon-ok"></i> {intl d="cawlpayment" l="Connection successful" js=1}').addClass('success');
-                    } else {
-                        result.html('<i class="glyphicon glyphicon-remove"></i> ' + response.error).addClass('error');
-                    }
-                },
-                error: function(xhr) {
-                    var msg = xhr.responseJSON ? xhr.responseJSON.error : '{intl d="cawlpayment" l="Connection failed" js=1}';
-                    result.html('<i class="glyphicon glyphicon-remove"></i> ' + msg).addClass('error');
-                },
-                complete: function() {
-                    btn.prop('disabled', false).html('<i class="glyphicon glyphicon-refresh"></i> {intl d="cawlpayment" l="Test API Connection" js=1}');
-                }
-            });
-        });
-
-        // Initialize
-        initCheckboxesFromValue();
-    }
-
-    // Copy webhook URL
     window.copyWebhookUrl = function() {
-        var url = document.getElementById('webhook-url').innerText.trim();
-
+        var input = document.getElementById('webhook-url');
+        input.select();
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(url).then(function() {
-                showCopySuccess();
-            }).catch(function() {
-                fallbackCopy(url);
-            });
+            navigator.clipboard.writeText(input.value).then(showCopySuccess).catch(function() { document.execCommand('copy'); showCopySuccess(); });
         } else {
-            fallbackCopy(url);
+            document.execCommand('copy');
+            showCopySuccess();
         }
     };
 
-    function fallbackCopy(text) {
-        var textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-9999px';
-        textArea.style.top = '-9999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        try {
-            var successful = document.execCommand('copy');
-            if (successful) {
-                showCopySuccess();
-            } else {
-                showCopyError();
-            }
-        } catch (err) {
-            showCopyError();
-        }
-
-        document.body.removeChild(textArea);
-    }
-
     function showCopySuccess() {
-        var btn = document.querySelector('#webhook-url + button');
-        var originalHtml = btn.innerHTML;
+        var btn = document.querySelector('#webhook-url').parentNode.querySelector('button');
+        var orig = btn.innerHTML;
         btn.innerHTML = '<i class="glyphicon glyphicon-ok"></i> {intl d="cawlpayment" l="Copied!" js=1}';
         btn.classList.add('btn-success');
         btn.classList.remove('btn-default');
         setTimeout(function() {
-            btn.innerHTML = originalHtml;
+            btn.innerHTML = orig;
             btn.classList.remove('btn-success');
             btn.classList.add('btn-default');
         }, 2000);
     }
 
-    function showCopyError() {
-        var range = document.createRange();
-        range.selectNode(document.getElementById('webhook-url'));
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-        alert('{intl d="cawlpayment" l="Please copy the selected text manually (Ctrl+C)" js=1}');
-    }
-
-    // Wait for jQuery
-    function waitForJQuery(callback, maxAttempts) {
-        maxAttempts = maxAttempts || 50;
-        var attempts = 0;
-        var interval = setInterval(function() {
-            attempts++;
-            if (typeof jQuery !== 'undefined') {
-                clearInterval(interval);
-                callback(jQuery);
-            } else if (attempts >= maxAttempts) {
-                clearInterval(interval);
-                console.error('CAWL Config: jQuery not found after ' + maxAttempts + ' attempts');
-            }
+    function waitForJQuery(callback, max) {
+        max = max || 50;
+        var n = 0;
+        var t = setInterval(function() {
+            n++;
+            if (typeof jQuery !== 'undefined') { clearInterval(t); callback(jQuery); }
+            else if (n >= max) { clearInterval(t); }
         }, 100);
     }
 
     waitForJQuery(function($) {
         $(document).ready(function() {
-            initCawlConfig($);
-            // Load payment products from API
-            loadPaymentProducts();
-        });
-    });
+            // Form submit: collect enabled methods
+            $('#cawl-config-form').on('submit', function() {
+                updateEnabledMethods();
+                return true;
+            });
 
-    // Native submit handler as backup
-    document.addEventListener('DOMContentLoaded', function() {
-        var form = document.getElementById('cawl-config-form');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                var checkboxes = document.querySelectorAll('#cawl-config-form .method-checkbox');
-                var enabled = [];
-                checkboxes.forEach(function(cb) {
-                    if (cb.checked) {
-                        var method = cb.getAttribute('data-method');
-                        if (method) {
-                            enabled.push(method);
+            // Test connection
+            $('#btn-test-connection').on('click', function() {
+                var btn = $(this);
+                var result = $('#test-result');
+                btn.prop('disabled', true).html('<i class="glyphicon glyphicon-refresh glyphicon-spin"></i>');
+                result.html('').attr('class', '');
+                $.ajax({
+                    url: '/admin/module/CawlPayment/test-connection',
+                    method: 'POST',
+                    data: { _token: $('#csrf-token').val() },
+                    success: function(response) {
+                        if (response.success) {
+                            result.html('<span class="text-success"><i class="glyphicon glyphicon-ok"></i> {intl d="cawlpayment" l="Connection successful" js=1}</span>');
+                        } else {
+                            result.html('<span class="text-danger"><i class="glyphicon glyphicon-remove"></i> ' + response.error + '</span>');
                         }
+                    },
+                    error: function(xhr) {
+                        var msg = xhr.responseJSON ? xhr.responseJSON.error : '{intl d="cawlpayment" l="Connection failed" js=1}';
+                        result.html('<span class="text-danger"><i class="glyphicon glyphicon-remove"></i> ' + msg + '</span>');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('<i class="glyphicon glyphicon-refresh"></i> {intl d="cawlpayment" l="Test API Connection" js=1}');
                     }
                 });
+            });
 
-                var hiddenInput = document.getElementById('enabled-methods-input');
-                if (hiddenInput && enabled.length > 0) {
-                    hiddenInput.value = enabled.join(',');
-                }
-            }, true);
-        }
+            // Load payment products
+            loadPaymentProducts();
+
+            // Test transaction
+            $('#btn-test-transaction').on('click', function() {
+                var btn = $(this);
+                var result = $('#test-transaction-result');
+                var amountEuros = parseFloat($('#test-amount').val()) || 10;
+                var amountCents = Math.round(amountEuros * 100);
+                var currency = ($('#test-currency').val().trim().toUpperCase()) || 'EUR';
+
+                btn.prop('disabled', true).html('<i class="glyphicon glyphicon-refresh glyphicon-spin"></i> {intl d="cawlpayment" l="Creating..." js=1}');
+                result.html('');
+
+                $.ajax({
+                    url: '/admin/module/CawlPayment/test-transaction',
+                    method: 'POST',
+                    data: { amount: amountCents, currency: currency },
+                    success: function(response) {
+                        if (response.success) {
+                            result.html(
+                                '<div class="alert alert-success">' +
+                                '<strong><i class="glyphicon glyphicon-ok"></i> {intl d="cawlpayment" l="Checkout created" js=1}</strong><br>' +
+                                'ID : <code>' + response.hostedCheckoutId + '</code><br>' +
+                                '<a href="' + response.checkoutUrl + '" target="_blank" class="btn btn-success btn-sm" style="margin-top:8px">' +
+                                '<i class="glyphicon glyphicon-new-window"></i> {intl d="cawlpayment" l="Open checkout" js=1}' +
+                                '</a>' +
+                                '</div>'
+                            );
+                        } else {
+                            result.html('<div class="alert alert-danger"><i class="glyphicon glyphicon-remove"></i> ' + response.error + '</div>');
+                        }
+                    },
+                    error: function(xhr) {
+                        var msg = xhr.responseJSON ? xhr.responseJSON.error : '{intl d="cawlpayment" l="Request failed" js=1}';
+                        result.html('<div class="alert alert-danger"><i class="glyphicon glyphicon-remove"></i> ' + msg + '</div>');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('<i class="glyphicon glyphicon-play"></i> {intl d="cawlpayment" l="Create test transaction" js=1}');
+                    }
+                });
+            });
+
+            // Logs
+            function loadCawlLogs() {
+                $.ajax({
+                    url: '/admin/module/CawlPayment/logs',
+                    method: 'GET',
+                    success: function(response) {
+                        var pre = $('#cawl-log-output');
+                        if (!response.lines || response.lines.length === 0) {
+                            pre.html('{intl d="cawlpayment" l="No CawlPayment logs found." js=1}');
+                            return;
+                        }
+                        var html = '';
+                        $.each(response.lines, function(i, line) {
+                            var escaped = $('<div>').text(line).html();
+                            var style = '';
+                            if (line.indexOf('[test-return]') !== -1) { style = 'color:#6a9955'; }
+                            else if (line.indexOf('Erreur') !== -1 || line.indexOf('Error') !== -1) { style = 'color:#f44747'; }
+                            html += '<span style="' + style + '">' + escaped + '</span>\n';
+                        });
+                        pre.html(html);
+                        pre.scrollTop(pre[0].scrollHeight);
+                    },
+                    error: function() {
+                        $('#cawl-log-output').text('{intl d="cawlpayment" l="Failed to load logs." js=1}');
+                    }
+                });
+            }
+
+            $('#btn-refresh-logs').on('click', function() {
+                var icon = $('#refresh-logs-icon');
+                icon.addClass('glyphicon-spin');
+                loadCawlLogs();
+                setTimeout(function() { icon.removeClass('glyphicon-spin'); }, 600);
+            });
+
+            loadCawlLogs();
+        });
     });
 })();
 </script>

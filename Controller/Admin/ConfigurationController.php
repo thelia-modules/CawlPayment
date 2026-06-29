@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Admin\BaseAdminController;
 use Thelia\Core\Security\AccessManager;
 use Thelia\Core\Security\Resource\AdminResources;
@@ -34,10 +33,6 @@ class ConfigurationController extends BaseAdminController
     ) {
     }
 
-    /**
-     * Save configuration
-     */
-    #[Route(path: '/admin/cawlpayment/configure', name: 'cawlpayment.admin.configure', methods: ['POST'])]
     public function saveAction(Request $request): Response
     {
         if (null !== $response = $this->checkAuth(
@@ -139,6 +134,9 @@ class ConfigurationController extends BaseAdminController
             $webhookWhitelistEnabled = isset($formData['webhook_whitelist_enabled']) ? '1' : '0';
             CawlPayment::setConfigValue('webhook_whitelist_enabled', $webhookWhitelistEnabled);
 
+            // Save test base URL (ngrok or other tunnel for local dev)
+            CawlPayment::setConfigValue('test_base_url', rtrim($formData['test_base_url'] ?? '', '/'));
+
             return new RedirectResponse(
                 URL::getInstance()->absoluteUrl('/admin/module/CawlPayment', ['success' => '1'])
             );
@@ -150,10 +148,6 @@ class ConfigurationController extends BaseAdminController
         }
     }
 
-    /**
-     * Get available payment products from API (with caching)
-     */
-    #[Route(path: '/admin/module/CawlPayment/payment-products', name: 'cawlpayment.admin.payment_products', methods: ['GET'])]
     public function paymentProductsAction(Request $request): JsonResponse
     {
         if (null !== $response = $this->checkAuth(
@@ -175,18 +169,78 @@ class ConfigurationController extends BaseAdminController
             $result = $apiService->getPaymentProducts($amount, $currency, $country);
 
             return new JsonResponse($result);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return new JsonResponse([
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => $this->formatApiError($e),
             ], 500);
         }
     }
 
-    /**
-     * Test API connection
-     */
-    #[Route(path: '/admin/module/CawlPayment/test-connection', name: 'cawlpayment.admin.test_connection', methods: ['POST'])]
+    public function createTestTransactionAction(Request $request): JsonResponse
+    {
+        if (null !== $response = $this->checkAuth(
+            AdminResources::MODULE,
+            ['CawlPayment'],
+            AccessManager::UPDATE
+        )) {
+            return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
+        }
+
+        if (CawlPayment::getConfigValue('environment') !== CawlPayment::ENV_TEST) {
+            return new JsonResponse(['success' => false, 'error' => 'Module must be set to test mode (Admin > CawlPayment > Environment)']);
+        }
+
+        if (empty(CawlPayment::getConfigValue('pspid'))
+            || empty(CawlPayment::getConfigValue('api_key_test'))
+            || empty(CawlPayment::getConfigValue('api_secret_test'))
+        ) {
+            return new JsonResponse(['success' => false, 'error' => 'Test credentials are incomplete (pspid, api_key_test, api_secret_test required)']);
+        }
+
+        $amountCents = (int) $request->request->get('amount', 1000);
+        $currency = strtoupper(trim((string) $request->request->get('currency', 'EUR')));
+
+        try {
+            $result = $this->apiService->createTestHostedCheckout($amountCents, $currency);
+
+            if (!($result['success'] ?? false)) {
+                return new JsonResponse(['success' => false, 'error' => $result['error'] ?? 'Unknown error']);
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'checkoutUrl' => $result['redirectUrl'] ?? $result['checkoutUrl'] ?? '',
+                'hostedCheckoutId' => $result['hostedCheckoutId'] ?? '',
+            ]);
+        } catch (\Throwable $e) {
+            return new JsonResponse(['success' => false, 'error' => $this->formatApiError($e)], 500);
+        }
+    }
+
+    public function getLogsAction(Request $request): JsonResponse
+    {
+        if (null !== $response = $this->checkAuth(
+            AdminResources::MODULE,
+            ['CawlPayment'],
+            AccessManager::VIEW
+        )) {
+            return new JsonResponse(['success' => false, 'error' => 'Access denied'], 403);
+        }
+
+        $logFile = \defined('THELIA_ROOT') ? THELIA_ROOT . 'var/log/log-thelia.txt' : null;
+
+        if (!$logFile || !file_exists($logFile)) {
+            return new JsonResponse(['success' => true, 'lines' => ['Log file not found: var/log/log-thelia.txt']]);
+        }
+
+        $allLines = @file($logFile, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES) ?: [];
+        $recentLines = \array_slice($allLines, -500);
+        $cawlLines = array_values(array_filter($recentLines, static fn (string $l): bool => str_contains($l, '[CawlPayment]')));
+
+        return new JsonResponse(['success' => true, 'lines' => \array_slice($cawlLines, -50)]);
+    }
+
     public function testConnectionAction(Request $request): JsonResponse
     {
         if (null !== $response = $this->checkAuth(
@@ -202,11 +256,20 @@ class ConfigurationController extends BaseAdminController
             $result = $apiService->testConnection();
 
             return new JsonResponse($result);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return new JsonResponse([
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => $this->formatApiError($e),
             ], 500);
         }
+    }
+
+    private function formatApiError(\Throwable $e): string
+    {
+        if ($e instanceof \Error && str_contains($e->getMessage(), 'OnlinePayments\Sdk')) {
+            return 'Le SDK Worldline n\'est pas installé. Exécutez : composer require online-payments/sdk-php:^5.0';
+        }
+
+        return $e->getMessage();
     }
 }

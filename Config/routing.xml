@@ -64,42 +64,17 @@
         <default key="_controller">CawlPayment\Controller\Admin\ConfigurationController::testConnectionAction</default>
     </route>
 
-    <!-- ============================== -->
-    <!-- Admin - API Test Dashboard     -->
-    <!-- ============================== -->
-
-    <route id="cawlpayment.admin.test_dashboard" path="/admin/cawlpayment/api-test" methods="GET">
-        <default key="_controller">CawlPayment\Controller\Admin\TestController::dashboardAction</default>
+    <route id="cawlpayment.admin.test_transaction" path="/admin/module/CawlPayment/test-transaction" methods="POST">
+        <default key="_controller">CawlPayment\Controller\Admin\ConfigurationController::createTestTransactionAction</default>
     </route>
 
-    <route id="cawlpayment.admin.api_test_connection" path="/admin/cawlpayment/api-test/connection" methods="POST">
-        <default key="_controller">CawlPayment\Controller\Admin\TestController::testConnectionAction</default>
+    <route id="cawlpayment.admin.logs" path="/admin/module/CawlPayment/logs" methods="GET">
+        <default key="_controller">CawlPayment\Controller\Admin\ConfigurationController::getLogsAction</default>
     </route>
 
-    <route id="cawlpayment.admin.api_test_config" path="/admin/cawlpayment/api-test/config" methods="GET">
-        <default key="_controller">CawlPayment\Controller\Admin\TestController::configurationAction</default>
+    <route id="cawlpayment.front.test_return" path="/cawlpayment/test-return" methods="GET">
+        <default key="_controller">CawlPayment\Controller\Front\PaymentController::testReturnAction</default>
     </route>
 
-    <route id="cawlpayment.admin.api_test_products" path="/admin/cawlpayment/api-test/products" methods="GET">
-        <default key="_controller">CawlPayment\Controller\Admin\TestController::paymentProductsAction</default>
-    </route>
-
-    <route id="cawlpayment.admin.api_test_create_checkout" path="/admin/cawlpayment/api-test/create-checkout" methods="POST">
-        <default key="_controller">CawlPayment\Controller\Admin\TestController::createTestCheckoutAction</default>
-    </route>
-
-    <route id="cawlpayment.admin.api_test_checkout_status" path="/admin/cawlpayment/api-test/checkout-status/{hostedCheckoutId}" methods="GET">
-        <default key="_controller">CawlPayment\Controller\Admin\TestController::checkoutStatusAction</default>
-        <requirement key="hostedCheckoutId">[a-zA-Z0-9_-]+</requirement>
-    </route>
-
-    <route id="cawlpayment.admin.api_test_payment_status" path="/admin/cawlpayment/api-test/payment-status/{paymentId}" methods="GET">
-        <default key="_controller">CawlPayment\Controller\Admin\TestController::paymentStatusAction</default>
-        <requirement key="paymentId">[a-zA-Z0-9_-]+</requirement>
-    </route>
-
-    <route id="cawlpayment.admin.api_test_return" path="/admin/cawlpayment/test-return" methods="GET">
-        <default key="_controller">CawlPayment\Controller\Admin\TestController::testReturnAction</default>
-    </route>
 
 </routes>

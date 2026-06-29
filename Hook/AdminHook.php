@@ -57,6 +57,7 @@ class AdminHook extends BaseHook
             'max_amount' => CawlPayment::getConfigValue('max_amount', '0'),
             'webhook_ip_whitelist' => CawlPayment::getConfigValue('webhook_ip_whitelist', ''),
             'webhook_whitelist_enabled' => CawlPayment::getConfigValue('webhook_whitelist_enabled', '1'),
+            'test_base_url' => CawlPayment::getConfigValue('test_base_url', ''),
         ];
 
         // Parse enabled methods into array
@@ -65,9 +66,8 @@ class AdminHook extends BaseHook
         // Get all payment methods by category
         $methodsByCategory = CawlPayment::getPaymentMethodsByCategory();
 
-        // Get webhook URL
-        $module = new CawlPayment();
-        $webhookUrl = $module->getWebhookUrl();
+        $baseUrl = \Thelia\Model\ConfigQuery::read('url_site', '');
+        $webhookUrl = rtrim($baseUrl, '/') . '/cawlpayment/webhook';
 
         // Check if credentials are configured
         $hasTestCredentials = !empty($config['api_key_test']) && !empty($config['api_secret_test']);

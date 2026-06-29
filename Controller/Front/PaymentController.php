@@ -12,7 +12,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
 use Thelia\Controller\Front\BaseFrontController;
 use Thelia\Core\Event\Order\OrderEvent;
 use Thelia\Core\Event\TheliaEvents;
@@ -35,10 +34,6 @@ class PaymentController extends BaseFrontController
         $this->dispatcher = $dispatcher;
         $this->apiService = $apiService;
     }
-    /**
-     * Initiate payment process
-     */
-    #[Route(path: '/cawlpayment/pay/{orderId}/{methodCode}', name: 'cawlpayment.front.pay', requirements: ['orderId' => '\d+', 'methodCode' => '[a-z0-9_]+'], methods: ['GET', 'POST'])]
     public function payAction(Request $request, int $orderId, string $methodCode): Response
     {
         // Get order
@@ -99,10 +94,6 @@ class PaymentController extends BaseFrontController
         }
     }
 
-    /**
-     * Handle success return from CAWL
-     */
-    #[Route(path: '/cawlpayment/success', name: 'cawlpayment.front.success', methods: ['GET'])]
     public function successAction(Request $request): Response
     {
         $orderId = $request->query->get('order_id');
@@ -168,10 +159,6 @@ class PaymentController extends BaseFrontController
         }
     }
 
-    /**
-     * Handle failure return from CAWL
-     */
-    #[Route(path: '/cawlpayment/failure', name: 'cawlpayment.front.failure', methods: ['GET'])]
     public function failureAction(Request $request): Response
     {
         $orderId = $request->query->get('order_id');
@@ -207,10 +194,6 @@ class PaymentController extends BaseFrontController
         );
     }
 
-    /**
-     * Handle cancel return from CAWL
-     */
-    #[Route(path: '/cawlpayment/cancel', name: 'cawlpayment.front.cancel', methods: ['GET'])]
     public function cancelAction(Request $request): Response
     {
         $orderId = $request->query->get('order_id');
@@ -245,10 +228,6 @@ class PaymentController extends BaseFrontController
         );
     }
 
-    /**
-     * Get payment status (AJAX)
-     */
-    #[Route(path: '/cawlpayment/status/{hostedCheckoutId}', name: 'cawlpayment.front.status', requirements: ['hostedCheckoutId' => '[a-zA-Z0-9_-]+'], methods: ['GET'])]
     public function statusAction(Request $request, string $hostedCheckoutId): JsonResponse
     {
         // Verify customer is authenticated
@@ -315,6 +294,57 @@ class PaymentController extends BaseFrontController
         if ($transactionRef) {
             $order->setTransactionRef($transactionRef);
             $order->save();
+        }
+    }
+
+    /**
+     * Return URL called by Worldline after a test hosted checkout (cawlpayment:test-transaction command).
+     *
+     * Returning 200 is enough to close the hosted checkout session properly.
+     * The JSON body shows the payment status for debugging purposes.
+     */
+    public function testReturnAction(Request $request): JsonResponse
+    {
+        $hostedCheckoutId = $request->query->get('hostedCheckoutId', '');
+
+        if (empty($hostedCheckoutId)) {
+            \Thelia\Log\Tlog::getInstance()->warning('[CawlPayment][test-return] Callback reçu sans hostedCheckoutId');
+
+            return new JsonResponse(['success' => false, 'error' => 'Missing hostedCheckoutId'], 400);
+        }
+
+        try {
+            $status = $this->apiService->getHostedCheckoutStatus($hostedCheckoutId);
+
+            $isPaid = $status['isPaid'] ?? false;
+            $logLine = sprintf(
+                '[CawlPayment][test-return] hostedCheckoutId=%s | status=%s | paymentStatus=%s | statusCode=%s | isPaid=%s | paymentId=%s',
+                $hostedCheckoutId,
+                $status['status'] ?? 'n/a',
+                $status['paymentStatus'] ?? 'n/a',
+                $status['statusCode'] ?? 'n/a',
+                $isPaid ? 'oui' : 'non',
+                $status['paymentId'] ?? 'n/a'
+            );
+
+            // error() used intentionally: Tlog default level is ERROR, info/warning are silently dropped.
+            \Thelia\Log\Tlog::getInstance()->error($logLine);
+
+            return new JsonResponse([
+                'success' => true,
+                'hostedCheckoutId' => $hostedCheckoutId,
+                'status' => $status,
+            ]);
+        } catch (\Throwable $e) {
+            \Thelia\Log\Tlog::getInstance()->error(
+                sprintf('[CawlPayment][test-return] Erreur pour hostedCheckoutId=%s : %s', $hostedCheckoutId, $e->getMessage())
+            );
+
+            return new JsonResponse([
+                'success' => false,
+                'hostedCheckoutId' => $hostedCheckoutId,
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 }
