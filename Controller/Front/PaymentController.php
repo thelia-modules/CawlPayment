@@ -139,8 +139,21 @@ class PaymentController extends BaseFrontController
 
                 // Check if payment is successful
                 if (isset($statusResponse['isPaid']) && $statusResponse['isPaid']) {
-                    // Update order status to PAID
-                    $this->confirmPayment($order, $statusResponse['paymentId'] ?? $transaction->getTransactionRef());
+                    // Defense in depth: only confirm when the paid amount/currency
+                    // match the order total.
+                    if ($apiService->amountMatchesOrder(
+                        $order,
+                        $statusResponse['paidAmount'] ?? null,
+                        $statusResponse['paidCurrency'] ?? null
+                    )) {
+                        // Update order status to PAID
+                        $this->confirmPayment($order, $statusResponse['paymentId'] ?? $transaction->getTransactionRef());
+                    } else {
+                        \Thelia\Log\Tlog::getInstance()->error(sprintf(
+                            '[CawlPayment] SECURITY: amount/currency mismatch on return for order #%d - not confirming, webhook will handle',
+                            $orderId
+                        ));
+                    }
                 }
             }
 

@@ -166,17 +166,9 @@ EventListeners/              - Écouteurs pour OpenAPI
 - **`redirectUrl` prioritaire** (`fix: use redirectUrl from API response for checkout URL`) : l'URL de checkout utilise `redirectUrl` de la réponse API si disponible, avec fallback sur `checkoutUrl`.
 - **Webhook Key non chiffrée** : `webhook_key_test` et `webhook_key_prod` retirés de `SENSITIVE_KEYS` dans `CredentialsEncryptionService` — ce sont des identifiants, pas des secrets. Le chiffrement était source de double-encodage lors de la sauvegarde.
 - **Niveau de log `error()`** : les appels Tlog dans `testReturnAction` utilisent `error()` (le niveau par défaut de Tlog est ERROR ; `info()` et `warning()` étaient silencieusement ignorés).
-
----
-
-## [Unreleased]
-
-### Bug connu
-
-- **Méthodes de paiement non filtrées en test** : `createTestHostedCheckout()` n'applique pas `PaymentProductFilters`, donc le hosted checkout affiche toutes les méthodes disponibles sur le compte marchand, quelle que soit la sélection dans la configuration du module.
+- **Méthodes de paiement filtrées en test** : `createTestHostedCheckout()` applique désormais `PaymentProductFilters` (`setRestrictTo`) à partir des méthodes activées dans la configuration du module (`getEnabledPaymentMethods()`). Le hosted checkout sandbox ne propose plus toutes les méthodes du compte marchand mais uniquement celles sélectionnées, pour cohérence avec la production.
 
 ### Prévu
-- Appliquer le filtre `enabled_methods` dans `createTestHostedCheckout()` pour cohérence avec la production
 - Support des remboursements partiels depuis l'admin Thelia
 - Capture différée des paiements
 - Rapports de transactions dans l'administration

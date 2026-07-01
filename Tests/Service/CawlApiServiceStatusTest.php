@@ -10,9 +10,10 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests unitaires pour la méthode isSuccessStatus de CawlApiService
  *
- * Vérifie que seuls les statuts de paiement finaux (CAPTURED, PAID, PENDING_CAPTURE)
- * sont considérés comme des paiements réussis. PAYMENT_CREATED ne doit PAS
- * être un statut de succès car il indique seulement l'initiation du paiement.
+ * Vérifie que seuls les statuts de paiement encaissé (CAPTURED, PAID) sont
+ * considérés comme des paiements réussis. PENDING_CAPTURE (autorisé mais non
+ * capturé) et PAYMENT_CREATED (paiement seulement initié) ne doivent PAS être
+ * des statuts de succès.
  */
 class CawlApiServiceStatusTest extends TestCase
 {
@@ -38,7 +39,6 @@ class CawlApiServiceStatusTest extends TestCase
         return [
             'CAPTURED' => ['CAPTURED'],
             'PAID' => ['PAID'],
-            'PENDING_CAPTURE' => ['PENDING_CAPTURE'],
         ];
     }
 
@@ -57,6 +57,7 @@ class CawlApiServiceStatusTest extends TestCase
             'IN_PROGRESS' => ['IN_PROGRESS'],
             'PENDING_PAYMENT' => ['PENDING_PAYMENT'],
             'PENDING_COMPLETION' => ['PENDING_COMPLETION'],
+            'PENDING_CAPTURE' => ['PENDING_CAPTURE'],
             'AUTHORIZATION_REQUESTED' => ['AUTHORIZATION_REQUESTED'],
             'CANCELLED' => ['CANCELLED'],
             'REFUNDED' => ['REFUNDED'],

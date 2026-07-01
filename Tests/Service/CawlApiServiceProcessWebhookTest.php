@@ -10,6 +10,7 @@ use CawlPayment\Service\CawlApiService;
 use CawlPayment\Service\CredentialsEncryptionService;
 use CawlPayment\Tests\Mock\TlogMock;
 use PHPUnit\Framework\TestCase;
+use Thelia\Model\Order;
 
 /**
  * Stub pour injecter un CawlTransaction mockable sans toucher à Propel
@@ -17,6 +18,7 @@ use PHPUnit\Framework\TestCase;
 class CawlApiServiceStub extends CawlApiService
 {
     private ?CawlTransaction $transactionToReturn = null;
+    private ?Order $orderToReturn = null;
     public bool $saveWasCalled = false;
     public ?CawlTransaction $savedTransaction = null;
 
@@ -25,9 +27,19 @@ class CawlApiServiceStub extends CawlApiService
         $this->transactionToReturn = $tx;
     }
 
+    public function setOrderToReturn(?Order $order): void
+    {
+        $this->orderToReturn = $order;
+    }
+
     protected function findTransactionByMerchantReference(string $merchantRef): ?CawlTransaction
     {
         return $this->transactionToReturn;
+    }
+
+    protected function findOrderById(int $orderId): ?Order
+    {
+        return $this->orderToReturn;
     }
 
     protected function saveTransaction(CawlTransaction $transaction): void
@@ -55,8 +67,11 @@ class CawlApiServiceProcessWebhookTest extends TestCase
         CawlPayment::resetConfig();
         TlogMock::reset();
 
-        // Mode test, pas de webhook secret → signature toujours bypassée
+        // Mode test + whitelist IP stricte → le bypass de signature (pas de
+        // secret en mode test) est autorisé.
         CawlPayment::setConfigValue('environment', CawlPayment::ENV_TEST);
+        CawlPayment::setConfigValue('webhook_whitelist_enabled', '1');
+        CawlPayment::setConfigValue('webhook_ip_whitelist', '127.0.0.1');
 
         $encryptionMock = $this->createMock(CredentialsEncryptionService::class);
         $encryptionMock->method('isSensitiveKey')->willReturn(false);
@@ -114,6 +129,7 @@ class CawlApiServiceProcessWebhookTest extends TestCase
         $transaction = $this->createMock(CawlTransaction::class);
         $transaction->method('getOrderId')->willReturn(42);
         $this->service->setTransactionToReturn($transaction);
+        $this->service->setOrderToReturn($this->orderMock());
 
         $payload = $this->validPayload('ORDER-001', 'CAPTURED');
 
@@ -122,6 +138,21 @@ class CawlApiServiceProcessWebhookTest extends TestCase
         $this->assertTrue($result['success']);
         $this->assertTrue($result['is_paid']);
         $this->assertSame(42, $result['order_id']);
+    }
+
+    public function testProcessWebhookRejectsWhenNoSecretAndWhitelistNotStrict(): void
+    {
+        // Test mode, no secret, but the IP whitelist does not restrict callers:
+        // the signature cannot be trusted → reject (public preprod spoofing).
+        CawlPayment::setConfigValue('webhook_whitelist_enabled', '0');
+        CawlPayment::setConfigValue('webhook_ip_whitelist', '');
+
+        $payload = $this->validPayload('ORDER-001', 'CAPTURED');
+
+        $result = $this->service->processWebhook($payload, '', json_encode($payload));
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('signature', strtolower($result['error']));
     }
 
     public function testProcessWebhookRejectsInvalidSignatureInProductionMode(): void
@@ -200,6 +231,7 @@ class CawlApiServiceProcessWebhookTest extends TestCase
         $transaction->expects($this->once())->method('setTransactionRef')->with('PAY-CAPTURED');
         $transaction->expects($this->once())->method('setStatus')->with('captured');
         $this->service->setTransactionToReturn($transaction);
+        $this->service->setOrderToReturn($this->orderMock());
 
         $payload = $this->validPayload('ORDER-10', 'CAPTURED', 'PAY-CAPTURED');
 
@@ -241,11 +273,70 @@ class CawlApiServiceProcessWebhookTest extends TestCase
     }
 
     // =========================================================================
+    // processWebhook() — vérification montant/devise (défense en profondeur)
+    // =========================================================================
+
+    public function testProcessWebhookRejectsWhenPaidAmountDiffersFromOrder(): void
+    {
+        $transaction = $this->createMock(CawlTransaction::class);
+        $transaction->method('getOrderId')->willReturn(50);
+        $this->service->setTransactionToReturn($transaction);
+        $this->service->setOrderToReturn($this->orderMock(10000, 'EUR'));
+
+        // Gateway reports 1.00 EUR while the order total is 100.00 EUR
+        $payload = $this->validPayload('ORDER-50', 'CAPTURED', 'PAY-50', 100, 'EUR');
+
+        $result = $this->service->processWebhook($payload, '', json_encode($payload));
+
+        $this->assertFalse($result['success']);
+        $this->assertArrayNotHasKey('is_paid', $result);
+    }
+
+    public function testProcessWebhookRejectsWhenCurrencyDiffersFromOrder(): void
+    {
+        $transaction = $this->createMock(CawlTransaction::class);
+        $transaction->method('getOrderId')->willReturn(51);
+        $this->service->setTransactionToReturn($transaction);
+        $this->service->setOrderToReturn($this->orderMock(10000, 'EUR'));
+
+        $payload = $this->validPayload('ORDER-51', 'CAPTURED', 'PAY-51', 10000, 'USD');
+
+        $result = $this->service->processWebhook($payload, '', json_encode($payload));
+
+        $this->assertFalse($result['success']);
+    }
+
+    public function testProcessWebhookRejectsWhenAmountOfMoneyMissing(): void
+    {
+        $transaction = $this->createMock(CawlTransaction::class);
+        $transaction->method('getOrderId')->willReturn(52);
+        $this->service->setTransactionToReturn($transaction);
+        $this->service->setOrderToReturn($this->orderMock(10000, 'EUR'));
+
+        $payload = [
+            'payment' => [
+                'id' => 'PAY-52',
+                'status' => 'CAPTURED',
+                'paymentOutput' => ['references' => ['merchantReference' => 'ORDER-52']],
+            ],
+        ];
+
+        $result = $this->service->processWebhook($payload, '', json_encode($payload));
+
+        $this->assertFalse($result['success']);
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
-    private function validPayload(string $merchantRef, string $status, string $paymentId = 'PAY-001'): array
-    {
+    private function validPayload(
+        string $merchantRef,
+        string $status,
+        string $paymentId = 'PAY-001',
+        int $amount = 10000,
+        string $currency = 'EUR'
+    ): array {
         return [
             'payment' => [
                 'id' => $paymentId,
@@ -253,8 +344,24 @@ class CawlApiServiceProcessWebhookTest extends TestCase
                 'statusOutput' => ['statusCode' => 9],
                 'paymentOutput' => [
                     'references' => ['merchantReference' => $merchantRef],
+                    'amountOfMoney' => ['amount' => $amount, 'currencyCode' => $currency],
                 ],
             ],
         ];
+    }
+
+    /**
+     * Order mock whose total matches $amountCents / 100 in $currency.
+     */
+    private function orderMock(int $amountCents = 10000, string $currency = 'EUR'): Order
+    {
+        $currencyMock = $this->createMock(\Thelia\Model\Currency::class);
+        $currencyMock->method('getCode')->willReturn($currency);
+
+        $order = $this->createMock(Order::class);
+        $order->method('getTotalAmount')->willReturn($amountCents / 100);
+        $order->method('getCurrency')->willReturn($currencyMock);
+
+        return $order;
     }
 }

@@ -75,6 +75,17 @@ class ConfigurationForm extends BaseForm
                 'required' => true,
             ])
 
+            // Capture mode toggle
+            ->add('capture_mode', ChoiceType::class, [
+                'choices' => [
+                    $this->trans('Direct capture (order paid immediately)') => CawlPayment::CAPTURE_MODE_SALE,
+                    $this->trans('Pre-authorization (capture later)') => CawlPayment::CAPTURE_MODE_PREAUTH,
+                ],
+                'label' => $this->trans('Capture mode'),
+                'label_attr' => ['help' => $this->trans('Direct capture charges the card at checkout; pre-authorization only reserves the funds and requires a later capture')],
+                'required' => true,
+            ])
+
             // Webhook keys (Test)
             ->add('webhook_key_test', TextType::class, [
                 'label' => $this->trans('Webhook Key (Test)'),

@@ -129,6 +129,12 @@ class ConfigurationController extends BaseAdminController
             CawlPayment::setConfigValue('min_amount', $formData['min_amount'] ?? '0');
             CawlPayment::setConfigValue('max_amount', $formData['max_amount'] ?? '0');
 
+            // Save capture mode (validate against known values, default to direct capture)
+            $captureMode = ($formData['capture_mode'] ?? '') === CawlPayment::CAPTURE_MODE_PREAUTH
+                ? CawlPayment::CAPTURE_MODE_PREAUTH
+                : CawlPayment::CAPTURE_MODE_SALE;
+            CawlPayment::setConfigValue('capture_mode', $captureMode);
+
             // Save webhook IP whitelist settings
             CawlPayment::setConfigValue('webhook_ip_whitelist', $formData['webhook_ip_whitelist'] ?? '');
             $webhookWhitelistEnabled = isset($formData['webhook_whitelist_enabled']) ? '1' : '0';

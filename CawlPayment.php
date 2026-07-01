@@ -31,6 +31,14 @@ class CawlPayment extends AbstractPaymentModule
     public const ENV_TEST = 'test';
     public const ENV_PRODUCTION = 'production';
 
+    /**
+     * Capture mode constants (Worldline authorizationMode values).
+     * SALE = capture immédiate (commande payée directement).
+     * PRE_AUTHORIZATION = autorisation seule, capture différée ultérieure.
+     */
+    public const CAPTURE_MODE_SALE = 'SALE';
+    public const CAPTURE_MODE_PREAUTH = 'PRE_AUTHORIZATION';
+
     /** API Endpoints */
     public const API_URL_TEST = 'https://payment.preprod.direct.worldline-solutions.com/v2';
     public const API_URL_PROD = 'https://payment.direct.worldline-solutions.com/v2';
