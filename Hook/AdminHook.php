@@ -50,6 +50,7 @@ class AdminHook extends BaseHook
             'webhook_key_prod' => CawlPayment::getConfigValue('webhook_key_prod', ''),
             'webhook_secret_prod' => CawlPayment::getConfigValue('webhook_secret_prod', ''),
             'environment' => CawlPayment::getConfigValue('environment', CawlPayment::ENV_TEST),
+            'capture_mode' => CawlPayment::getConfigValue('capture_mode', CawlPayment::CAPTURE_MODE_SALE),
             'enabled_methods' => CawlPayment::getConfigValue('enabled_methods', ''),
             'enable_logging' => CawlPayment::getConfigValue('enable_logging', '1'),
             'checkout_description' => CawlPayment::getConfigValue('checkout_description', ''),

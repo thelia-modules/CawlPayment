@@ -99,4 +99,32 @@ class IpWhitelistServicePublicTest extends TestCase
 
         $this->assertFalse($this->service->isIpAllowed('1.2.3.4'));
     }
+
+    // =========================================================================
+    // isStrict() — la whitelist restreint-elle réellement les appelants ?
+    // =========================================================================
+
+    public function testIsStrictReturnsTrueWhenEnabledWithConfiguredIps(): void
+    {
+        CawlPayment::setConfigValue('webhook_whitelist_enabled', '1');
+        CawlPayment::setConfigValue('webhook_ip_whitelist', '192.168.1.10');
+
+        $this->assertTrue($this->service->isStrict());
+    }
+
+    public function testIsStrictReturnsFalseWhenDisabled(): void
+    {
+        CawlPayment::setConfigValue('webhook_whitelist_enabled', '0');
+        CawlPayment::setConfigValue('webhook_ip_whitelist', '192.168.1.10');
+
+        $this->assertFalse($this->service->isStrict());
+    }
+
+    public function testIsStrictReturnsFalseWhenEnabledButEmpty(): void
+    {
+        CawlPayment::setConfigValue('webhook_whitelist_enabled', '1');
+        CawlPayment::setConfigValue('webhook_ip_whitelist', '');
+
+        $this->assertFalse($this->service->isStrict());
+    }
 }

@@ -12,6 +12,7 @@ use OnlinePayments\Sdk\Communicator;
 use OnlinePayments\Sdk\CommunicatorConfiguration;
 use OnlinePayments\Sdk\DefaultConnection;
 use OnlinePayments\Sdk\Domain\AmountOfMoney;
+use OnlinePayments\Sdk\Domain\CardPaymentMethodSpecificInput;
 use OnlinePayments\Sdk\Domain\ContactDetails;
 use OnlinePayments\Sdk\Domain\CreateHostedCheckoutRequest;
 use OnlinePayments\Sdk\Domain\Customer;
@@ -23,6 +24,7 @@ use OnlinePayments\Sdk\Domain\PaymentProductFiltersHostedCheckout;
 use OnlinePayments\Sdk\Domain\PaymentProductFilter;
 use Thelia\Log\Tlog;
 use Thelia\Model\Order;
+use Thelia\Model\OrderQuery;
 
 /**
  * Service for interacting with CAWL Solutions API using official SDK
@@ -33,7 +35,8 @@ class CawlApiService
     private ?Client $client = null;
 
     public function __construct(
-        private readonly CredentialsEncryptionService $encryptionService
+        private readonly CredentialsEncryptionService $encryptionService,
+        private readonly IpWhitelistService $ipWhitelistService = new IpWhitelistService()
     ) {
     }
 
@@ -341,12 +344,22 @@ class CawlApiService
             $hostedCheckoutInput->setLocale($this->getLocale());
             $hostedCheckoutInput->setShowResultPage(false);
 
-            // Add payment method filter if specified
+            // Restrict the hosted checkout to the enabled payment methods. If a
+            // specific method was requested, restrict to that one; otherwise fall
+            // back to every method enabled in the module config (the customer then
+            // picks on the CAWL page). Without this, Worldline shows all products.
             if (!empty($paymentMethod) && isset(CawlPayment::PAYMENT_METHODS[$paymentMethod])) {
-                $productId = CawlPayment::PAYMENT_METHODS[$paymentMethod]['id'];
+                $productIds = [(int) CawlPayment::PAYMENT_METHODS[$paymentMethod]['id']];
+            } else {
+                $productIds = array_values(array_map(
+                    static fn (array $method): int => (int) $method['id'],
+                    $this->getEnabledPaymentMethods(),
+                ));
+            }
 
+            if ($productIds !== []) {
                 $filter = new PaymentProductFilter();
-                $filter->setProducts([$productId]);
+                $filter->setProducts($productIds);
 
                 $productFilters = new PaymentProductFiltersHostedCheckout();
                 $productFilters->setRestrictTo($filter);
@@ -358,6 +371,7 @@ class CawlApiService
             $request = new CreateHostedCheckoutRequest();
             $request->setOrder($sdkOrder);
             $request->setHostedCheckoutSpecificInput($hostedCheckoutInput);
+            $this->applyCaptureMode($request);
 
             // Make API call
             $response = $client->merchant($merchantId)->hostedCheckout()->createHostedCheckout($request);
@@ -429,12 +443,20 @@ class CawlApiService
             $paymentId = null;
             $paymentStatus = null;
             $statusCode = null;
+            $paidAmount = null;
+            $paidCurrency = null;
 
             if ($createdPaymentOutput && $createdPaymentOutput->getPayment()) {
                 $payment = $createdPaymentOutput->getPayment();
                 $paymentId = $payment->getId();
                 $paymentStatus = $payment->getStatus();
                 $statusCode = $payment->getStatusOutput()?->getStatusCode();
+
+                $amountOfMoney = $payment->getPaymentOutput()?->getAmountOfMoney();
+                if ($amountOfMoney) {
+                    $paidAmount = $amountOfMoney->getAmount();
+                    $paidCurrency = $amountOfMoney->getCurrencyCode();
+                }
             }
 
             // Update transaction record
@@ -467,6 +489,8 @@ class CawlApiService
                 'paymentId' => $paymentId,
                 'paymentStatus' => $paymentStatus,
                 'statusCode' => $statusCode,
+                'paidAmount' => $paidAmount,
+                'paidCurrency' => $paidCurrency,
                 'isPaid' => $paymentStatus !== null && $this->isSuccessStatus($paymentStatus),
             ];
         } catch (\Exception $e) {
@@ -549,10 +573,28 @@ class CawlApiService
             $hostedCheckoutInput->setLocale($this->getLocale());
             $hostedCheckoutInput->setShowResultPage(false);
 
+            // Restrict the test checkout to the methods enabled in the module config,
+            // for parity with production createHostedCheckout().
+            $enabledProductIds = array_values(array_map(
+                static fn (array $method): int => (int) $method['id'],
+                $this->getEnabledPaymentMethods(),
+            ));
+
+            if ($enabledProductIds !== []) {
+                $filter = new PaymentProductFilter();
+                $filter->setProducts($enabledProductIds);
+
+                $productFilters = new PaymentProductFiltersHostedCheckout();
+                $productFilters->setRestrictTo($filter);
+
+                $hostedCheckoutInput->setPaymentProductFilters($productFilters);
+            }
+
             // Build request
             $request = new CreateHostedCheckoutRequest();
             $request->setOrder($sdkOrder);
             $request->setHostedCheckoutSpecificInput($hostedCheckoutInput);
+            $this->applyCaptureMode($request);
 
             // Make API call
             $response = $client->merchant($merchantId)->hostedCheckout()->createHostedCheckout($request);
@@ -630,12 +672,41 @@ class CawlApiService
 
         $this->log("Webhook processed: reference {$merchantReference}, status: {$status}");
 
+        $isPaid = $this->isSuccessStatus($status);
+
+        // Defense in depth: never confirm a payment whose amount/currency does
+        // not match the order total.
+        if ($isPaid) {
+            $paidAmount = $payload['payment']['paymentOutput']['amountOfMoney']['amount'] ?? null;
+            $paidCurrency = $payload['payment']['paymentOutput']['amountOfMoney']['currencyCode'] ?? null;
+            $order = $this->findOrderById($transaction->getOrderId());
+
+            if ($order === null || !$this->amountMatchesOrder($order, $paidAmount, $paidCurrency)) {
+                $this->log(sprintf(
+                    'SECURITY: payment amount/currency mismatch for reference %s (paid %s %s) - rejecting confirmation',
+                    $merchantReference,
+                    $paidAmount ?? 'null',
+                    $paidCurrency ?? 'null'
+                ), 'error');
+
+                return [
+                    'success' => false,
+                    'error' => 'Amount or currency mismatch',
+                ];
+            }
+        }
+
         return [
             'success' => true,
             'order_id' => $transaction->getOrderId(),
             'status' => $this->mapCawlStatus($status),
-            'is_paid' => $this->isSuccessStatus($status),
+            'is_paid' => $isPaid,
         ];
+    }
+
+    protected function findOrderById(int $orderId): ?Order
+    {
+        return OrderQuery::create()->findPk($orderId);
     }
 
     protected function findTransactionByMerchantReference(string $merchantRef): ?CawlTransaction
@@ -655,19 +726,31 @@ class CawlApiService
     /**
      * Verify webhook signature
      */
+    /**
+     * @internal Relies on the caller having already enforced the IP whitelist
+     *           on the incoming request (see WebhookController::handleAction,
+     *           which returns 403 before calling processWebhook). The
+     *           $ipWhitelistService->isStrict() check below only confirms the
+     *           whitelist is *configured* to restrict callers; it does NOT
+     *           re-check the current request's IP. Never call this from a path
+     *           that does not filter the client IP upstream.
+     */
     private function verifyWebhookSignature(string $rawBody, string $signature): bool
     {
         $webhookSecret = $this->getActiveWebhookSecret();
 
-        // SECURITY: Reject webhooks if no secret is configured in production
+        // SECURITY: without a webhook secret the signature cannot be verified.
+        // Skipping it is only tolerated in test mode AND when the IP whitelist
+        // strictly restricts callers — otherwise a publicly reachable endpoint
+        // (e.g. preprod) would let anyone forge a webhook and confirm real orders.
         if (empty($webhookSecret)) {
-            if ($this->isProductionMode()) {
-                $this->log("SECURITY: No webhook secret configured in production - rejecting webhook", 'error');
-                return false;
+            if (!$this->isProductionMode() && $this->ipWhitelistService->isStrict()) {
+                $this->log("WARNING: No webhook secret in test mode - skipping signature verification (IP whitelist is strict)", 'warning');
+                return true;
             }
-            // Allow in test mode only with a warning
-            $this->log("WARNING: No webhook secret configured in test mode - skipping signature verification", 'warning');
-            return true;
+
+            $this->log("SECURITY: No webhook secret configured (or IP whitelist not strict) - rejecting webhook", 'error');
+            return false;
         }
 
         if (empty($signature)) {
@@ -713,11 +796,64 @@ class CawlApiService
     }
 
     /**
-     * Check if status indicates successful payment
+     * Check if status indicates a captured (money actually received) payment.
+     *
+     * PENDING_CAPTURE is deliberately excluded: it means the payment is only
+     * authorized (funds reserved) and not yet captured, so it must not be
+     * treated as paid — otherwise an order would be marked PAID before the
+     * money is collected. See mapCawlStatus(): PENDING_CAPTURE => 'authorized'.
      */
     public function isSuccessStatus(string $status): bool
     {
-        return in_array($status, ['CAPTURED', 'PAID', 'PENDING_CAPTURE']);
+        return in_array($status, ['CAPTURED', 'PAID'], true);
+    }
+
+    /**
+     * Apply the configured capture mode to a hosted checkout request.
+     *
+     * SALE captures immediately (order paid at checkout); PRE_AUTHORIZATION only
+     * authorizes and requires a later capture. Setting it explicitly per request
+     * makes the behaviour independent of the Worldline account default.
+     */
+    private function applyCaptureMode(CreateHostedCheckoutRequest $request): void
+    {
+        $cardInput = new CardPaymentMethodSpecificInput();
+        $cardInput->setAuthorizationMode($this->getCaptureAuthorizationMode());
+        $request->setCardPaymentMethodSpecificInput($cardInput);
+    }
+
+    /**
+     * Worldline authorizationMode from module config, defaulting to direct capture.
+     */
+    private function getCaptureAuthorizationMode(): string
+    {
+        $mode = CawlPayment::getConfigValue('capture_mode', CawlPayment::CAPTURE_MODE_SALE);
+
+        return $mode === CawlPayment::CAPTURE_MODE_PREAUTH
+            ? CawlPayment::CAPTURE_MODE_PREAUTH
+            : CawlPayment::CAPTURE_MODE_SALE;
+    }
+
+    /**
+     * Defense in depth: verify the amount and currency actually paid match the
+     * order total before confirming payment. Prevents confirming an order when
+     * the gateway reports a different amount/currency than the one requested at
+     * checkout creation (tampering, replay, misconfiguration).
+     *
+     * @param int|null    $paidAmount   Amount actually paid, in minor units (cents)
+     * @param string|null $paidCurrency ISO 4217 code actually paid
+     */
+    public function amountMatchesOrder(Order $order, ?int $paidAmount, ?string $paidCurrency): bool
+    {
+        if ($paidAmount === null || $paidCurrency === null) {
+            return false;
+        }
+
+        $expectedAmount = (int) round($order->getTotalAmount() * 100);
+        $expectedCurrency = $order->getCurrency()->getCode();
+
+        return $paidAmount === $expectedAmount
+            && strtoupper($paidCurrency) === strtoupper($expectedCurrency);
     }
 
     /**

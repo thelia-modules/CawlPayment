@@ -130,6 +130,27 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label>{intl d='cawlpayment' l='Capture mode'}</label><br>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default{if $config.capture_mode != 'PRE_AUTHORIZATION'} active{/if}">
+                                    <input type="radio" name="cawlpayment_configuration[capture_mode]"
+                                           value="SALE" {if $config.capture_mode != 'PRE_AUTHORIZATION'}checked{/if}>
+                                    <i class="glyphicon glyphicon-euro"></i>
+                                    {intl d='cawlpayment' l='Direct capture'}
+                                </label>
+                                <label class="btn btn-default{if $config.capture_mode == 'PRE_AUTHORIZATION'} active{/if}">
+                                    <input type="radio" name="cawlpayment_configuration[capture_mode]"
+                                           value="PRE_AUTHORIZATION" {if $config.capture_mode == 'PRE_AUTHORIZATION'}checked{/if}>
+                                    <i class="glyphicon glyphicon-time"></i>
+                                    {intl d='cawlpayment' l='Pre-authorization'}
+                                </label>
+                            </div>
+                            <p class="help-block">
+                                {intl d='cawlpayment' l='Direct capture charges the card immediately (order paid at checkout). Pre-authorization only reserves the funds and requires a later capture.'}
+                            </p>
+                        </div>
+
                         <ul class="nav nav-tabs" role="tablist">
                             <li role="presentation" class="{if !$is_production}active{/if}">
                                 <a href="#creds-test" data-toggle="tab">

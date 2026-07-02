@@ -50,6 +50,21 @@ class IpWhitelistService
     }
 
     /**
+     * Indique si la whitelist restreint réellement les appelants.
+     *
+     * Stricte = activée ET au moins une IP/CIDR configurée. Une whitelist
+     * activée mais vide bloque tout (donc n'autorise personne), une whitelist
+     * désactivée n'autorise rien de particulier : dans les deux cas elle ne
+     * constitue pas une restriction exploitable comme garde-fou.
+     */
+    public function isStrict(): bool
+    {
+        $enabled = (bool) CawlPayment::getConfigValue('webhook_whitelist_enabled', '1');
+
+        return $enabled && !empty($this->getAllowedIps());
+    }
+
+    /**
      * Récupère la liste des IPs autorisées depuis la configuration
      *
      * @return array<string> Liste des IPs ou plages CIDR

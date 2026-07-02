@@ -570,15 +570,9 @@ Voir [CHANGELOG.md](CHANGELOG.md) pour l'historique complet des versions.
 
 ## Bugs connus
 
-### Méthodes de paiement non filtrées en test
+_Aucun bug connu pour le moment._
 
-En mode test, le hosted checkout Worldline affiche **toutes les méthodes de paiement disponibles** sur le compte marchand, indépendamment des méthodes sélectionnées dans la configuration du module.
-
-**Comportement attendu** : seules les méthodes cochées dans *Admin > CawlPayment > Payment Methods* devraient être proposées au client, y compris lors des tests via `cawlpayment:test-transaction` et l'interface admin.
-
-**Impact** : en production, le filtrage fonctionne via `PaymentProductFilters` passé à la création du hosted checkout. En test (`createTestHostedCheckout`), ce filtre n'est pas appliqué.
-
-**Workaround** : aucun pour l'instant — tester manuellement uniquement les méthodes censées être actives.
+> **Corrigé** (voir CHANGELOG `[Unreleased]`) — les méthodes de paiement sont désormais filtrées en mode test : `createTestHostedCheckout()` applique `PaymentProductFilters` à partir des méthodes activées dans *Admin > CawlPayment > Payment Methods*, comme en production.
 
 ---
 
