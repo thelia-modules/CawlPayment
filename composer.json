@@ -1,5 +1,5 @@
 {
-    "name": "thelia/thelia-payment",
+    "name": "thelia/cawl-payment-module",
     "description": "CAWL Solutions / Worldline payment gateway module for Thelia 3. Supports 30+ payment methods including cards, PayPal, Apple Pay, Klarna, and more.",
     "license": "proprietary",
     "type": "thelia-module",
